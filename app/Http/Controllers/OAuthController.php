@@ -18,7 +18,7 @@ class OAuthController extends Controller
 
     public function handleGoogleCallback()
     {
-        $googleUser = Socialite::driver('google')->user();
+        $googleUser = Socialite::driver('google')->stateless()->user();
 
         if (! str_ends_with($googleUser->getEmail(), '@must.ac.mw')) {
             return redirect()->route('login')
