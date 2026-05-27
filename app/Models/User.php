@@ -11,7 +11,8 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name',
+        'firstname',
+        'lastname',
         'email',
         'password',
         'reg_number',
@@ -27,5 +28,10 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
         ];
+    }
+
+    public function getNameAttribute(): string
+    {
+        return trim($this->firstname . ' ' . $this->lastname);
     }
 }

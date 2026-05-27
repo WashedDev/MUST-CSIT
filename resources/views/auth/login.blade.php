@@ -33,6 +33,10 @@
       <button type="submit" class="btn btn-primary btn-block">Sign In</button>
     </form>
 
+    <div class="oauth-divider"><span>or</span></div>
+
+    <a href="{{ route('auth.google') }}" class="btn btn-google btn-block">Sign in with Google</a>
+
     <p class="auth-foot">Not a member yet? <a href="{{ route('register') }}">Join the Society</a></p>
   </div>
 </div>

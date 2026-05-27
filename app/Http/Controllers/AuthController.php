@@ -42,7 +42,8 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $data = $request->validate([
-            'name'        => ['required', 'string', 'max:120'],
+            'firstname'  => ['required', 'string', 'max:60'],
+            'lastname'   => ['required', 'string', 'max:60'],
             'reg_number'  => ['required', 'string', 'max:40', 'unique:users,reg_number'],
             'programme'   => ['required', 'string', 'max:120'],
             'year'        => ['required', 'integer', 'between:1,6'],
@@ -51,7 +52,8 @@ class AuthController extends Controller
         ]);
 
         $user = User::create([
-            'name'       => $data['name'],
+            'firstname'  => $data['firstname'],
+            'lastname'   => $data['lastname'],
             'reg_number' => $data['reg_number'],
             'programme'  => $data['programme'],
             'year'       => $data['year'],

@@ -4,20 +4,25 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('reg_number', 40)->unique()->after('name');
-            $table->string('programme', 120)->after('reg_number');
-            $table->unsignedTinyInteger('year')->after('programme');
+            $table->string('firstname', 60)->after('id');
+            $table->string('lastname', 60)->after('firstname');
+            $table->dropColumn('name');
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['reg_number', 'programme', 'year']);
+            $table->string('name')->after('id');
+            $table->dropColumn(['firstname', 'lastname']);
         });
     }
 };

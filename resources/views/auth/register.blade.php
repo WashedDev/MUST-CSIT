@@ -18,9 +18,15 @@
     @endif
 
     <form method="POST" action="{{ route('register') }}">@csrf
-      <div class="form-row">
-        <label>Full Name</label>
-        <input type="text" name="name" value="{{ old('name') }}" required>
+      <div class="form-grid">
+        <div class="form-row">
+          <label>First Name</label>
+          <input type="text" name="firstname" value="{{ old('firstname') }}" required>
+        </div>
+        <div class="form-row">
+          <label>Last Name</label>
+          <input type="text" name="lastname" value="{{ old('lastname') }}" required>
+        </div>
       </div>
       <div class="form-grid">
         <div class="form-row">
@@ -55,6 +61,10 @@
       </div>
       <button type="submit" class="btn btn-gold btn-block">Create Account</button>
     </form>
+
+    <div class="oauth-divider"><span>or</span></div>
+
+    <a href="{{ route('auth.google') }}" class="btn btn-google btn-block">Sign up with Google</a>
 
     <p class="auth-foot">Already a member? <a href="{{ route('login') }}">Sign in</a></p>
   </div>
