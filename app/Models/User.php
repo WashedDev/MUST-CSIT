@@ -18,6 +18,7 @@ class User extends Authenticatable
         'reg_number',
         'programme',
         'year',
+        'role',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -33,5 +34,35 @@ class User extends Authenticatable
     public function getNameAttribute(): string
     {
         return trim($this->firstname . ' ' . $this->lastname);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function candidates()
+    {
+        return $this->hasMany(Candidate::class);
+    }
+
+    public function votes()
+    {
+        return $this->hasMany(Vote::class);
+    }
+
+    public function articles()
+    {
+        return $this->hasMany(Article::class);
+    }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(Document::class);
     }
 }

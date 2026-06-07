@@ -11,17 +11,18 @@
 
 <section class="block">
   <div class="container">
-    @foreach($events as $e)
-      @php [$mon,$dayPart] = explode(' ', $e['date']); $day = rtrim(strstr($dayPart, ','), ','); @endphp
+    @forelse($events as $e)
       <div class="event">
-        <div class="date"><div class="d">{{ $day }}</div><div class="m">{{ $mon }}</div></div>
+        <div class="date"><div class="d">{{ $e->date->format('j') }}</div><div class="m">{{ $e->date->format('M') }}</div></div>
         <div>
-          <strong>{{ $e['title'] }}</strong>
-          <div style="color:var(--muted);font-size:.9rem">{{ $e['location'] }} · {{ $e['date'] }}</div>
+          <a href="{{ route('events.show', $e) }}" style="color:inherit;text-decoration:none"><strong>{{ $e->title }}</strong></a>
+          <div style="color:var(--muted);font-size:.9rem">{{ $e->location }} · {{ $e->date->format('M d, Y') }}</div>
         </div>
-        <span class="tag">{{ $e['tag'] }}</span>
+        <span class="tag">{{ $e->tag }}</span>
       </div>
-    @endforeach
+    @empty
+      <p style="color:var(--muted)">No events scheduled yet.</p>
+    @endforelse
   </div>
 </section>
 

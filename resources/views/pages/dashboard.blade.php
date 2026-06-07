@@ -25,7 +25,7 @@
         <div class="icon">▣</div>
         <h3>Next Event</h3>
         <p><strong>Intro to AI Workshop</strong> — Jun 12, MUST Lab A. Limited to 40 members.</p>
-        <p style="margin-top:14px"><a href="{{ route('events') }}" class="btn btn-primary">View all events</a></p>
+        <p style="margin-top:14px"><a href="{{ route('events.index') }}" class="btn btn-primary">View all events</a></p>
       </div>
       <div class="card">
         <div class="icon">◉</div>

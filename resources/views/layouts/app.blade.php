@@ -41,7 +41,13 @@
       <a href="{{ route('landing') }}" class="{{ request()->routeIs('landing') ? 'active' : '' }}">Home</a>
       @auth
         <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
-        <a href="{{ route('events') }}" class="{{ request()->routeIs('events') ? 'active' : '' }}">Events</a>
+        <a href="{{ route('articles.index') }}" class="{{ request()->routeIs('articles.*') ? 'active' : '' }}">News</a>
+        <a href="{{ route('elections.index') }}" class="{{ request()->routeIs('elections.*') ? 'active' : '' }}">Elections</a>
+        <a href="{{ route('events.index') }}" class="{{ request()->routeIs('events.*') ? 'active' : '' }}">Events</a>
+        <a href="{{ route('documents.index') }}" class="{{ request()->routeIs('documents.*') ? 'active' : '' }}">Repository</a>
+        @if(auth()->user()->isAdmin())
+          <a href="{{ route('admin.members.index') }}" class="{{ request()->routeIs('admin.members.*') ? 'active' : '' }}">Members</a>
+        @endif
         <a href="{{ route('profile') }}" class="{{ request()->routeIs('profile') ? 'active' : '' }}">Profile</a>
         <form method="POST" action="{{ route('logout') }}" style="margin:0">@csrf
           <button class="btn btn-outline" type="submit">Logout</button>

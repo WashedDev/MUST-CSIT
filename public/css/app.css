@@ -126,3 +126,13 @@ footer .copy{border-top:1px solid rgba(255,255,255,.1);padding-top:18px;text-ali
   .stat-grid{margin-top:20px}
   nav.primary{display:none}
 }
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-weight:600;font-size:.88rem;margin-bottom:6px;color:var(--must-blue-dark)}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:.95rem;font-family:inherit;background:#fff;transition:.15s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--must-blue);box-shadow:0 0 0 3px rgba(26,58,107,.12)}
+.form-error{color:var(--must-red);font-size:.85rem;margin-top:4px}
+.alert{padding:14px 18px;border-radius:8px;margin-bottom:16px;font-size:.92rem;font-weight:500}
+.alert-success{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0}
+.alert-error{background:#fdecea;color:#9b2c1f;border:1px solid #f5b8b1}
+table a{color:var(--must-blue)}
+table a:hover{color:var(--must-blue-dark)}
