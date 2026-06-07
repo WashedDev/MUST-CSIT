@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\Election;
 use App\Models\Event;
 use Illuminate\Http\Request;
 
@@ -11,7 +12,8 @@ class EventController extends Controller
     public function index()
     {
         $events = Event::withCount('bookings')->latest('date')->paginate(10);
-        return view('pages.events', compact('events'));
+        $elections = Election::withCount('votes')->latest()->get();
+        return view('pages.events', compact('events', 'elections'));
     }
 
     public function show(Event $event)

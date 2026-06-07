@@ -1,20 +1,20 @@
 @extends('layouts.dashboard')
-@section('title','Dashboard — MUST CSIT Society')
+@section('title','Admin Dashboard — MUST CSIT Society')
 @section('content')
 
 <div class="dash-header">
-  <h1>Welcome back, {{ auth()->user()->firstname }} 👋</h1>
-  <p>Here's what's happening in the Society.</p>
+  <h1>Admin Dashboard 👋</h1>
+  <p>Welcome back, {{ auth()->user()->firstname }}. Here's the society overview.</p>
 </div>
 
 <div class="stat-grid">
-  <div class="stat"><div class="l">My Bookings</div><div class="n">{{ $stats['my_bookings'] }}</div></div>
+  <div class="stat"><div class="l">Total Members</div><div class="n">{{ $stats['members'] }}</div></div>
   <div class="stat"><div class="l">Upcoming Events</div><div class="n">{{ $stats['upcoming_events'] }}</div></div>
   <div class="stat"><div class="l">Active Elections</div><div class="n">{{ $stats['active_elections'] }}</div></div>
-  <div class="stat"><div class="l">New Articles</div><div class="n">{{ $stats['new_articles'] }}</div></div>
+  <div class="stat"><div class="l">Articles</div><div class="n">{{ $stats['articles'] }}</div></div>
 </div>
 
-<div class="dash-grid-2" style="margin-top:28px">
+<div class="dash-grid-3" style="margin-top:28px">
   <div class="dash-card">
     <div class="dash-card-head">
       <h3>Upcoming Events</h3>
@@ -23,11 +23,10 @@
     @forelse($upcomingEvents as $e)
       <div class="dash-list-item">
         <div class="dash-list-date">{{ $e->date->format('M j') }}</div>
-        <div style="flex:1">
+        <div>
           <strong>{{ $e->title }}</strong>
-          <div class="dash-list-meta">{{ $e->location }}</div>
+          <div class="dash-list-meta">{{ $e->location }} · {{ $e->availableSeats() }}/{{ $e->capacity }} seats</div>
         </div>
-        <span class="tag">{{ $e->tag }}</span>
       </div>
     @empty
       <p class="dash-empty">No upcoming events.</p>
@@ -41,9 +40,9 @@
     </div>
     @forelse($latestArticles as $a)
       <div class="dash-list-item">
-        <div style="flex:1">
+        <div>
           <a href="{{ route('articles.show', $a) }}" style="color:inherit;text-decoration:none"><strong>{{ $a->title }}</strong></a>
-          <div class="dash-list-meta">{{ $a->author->name }} · {{ $a->published_at?->format('M d') ?? 'Draft' }}</div>
+          <div class="dash-list-meta">{{ $a->author->name }} · {{ $a->published_at?->format('M d') }}</div>
         </div>
         <span class="tag">{{ ucfirst($a->type) }}</span>
       </div>
@@ -51,24 +50,25 @@
       <p class="dash-empty">No articles yet.</p>
     @endforelse
   </div>
-</div>
 
-@if(count($myBookings) > 0)
-  <div class="dash-card" style="margin-top:24px">
+  <div class="dash-card">
     <div class="dash-card-head">
-      <h3>My Bookings</h3>
+      <h3>Recent Members</h3>
+      <a href="{{ route('admin.members.index') }}" class="dash-link">Manage →</a>
     </div>
-    @foreach($myBookings as $b)
+    @forelse($recentMembers as $m)
       <div class="dash-list-item">
-        <div class="dash-list-date">{{ $b->event->date->format('M j') }}</div>
-        <div style="flex:1">
-          <strong>{{ $b->event->title }}</strong>
-          <div class="dash-list-meta">{{ $b->status }} · Booked {{ $b->created_at->format('M d') }}</div>
+        <div class="user-avatar sm">{{ strtoupper(substr($m->firstname,0,1)) }}{{ strtoupper(substr($m->lastname,0,1)) }}</div>
+        <div>
+          <strong>{{ $m->name }}</strong>
+          <div class="dash-list-meta">{{ $m->email }} · {{ $m->created_at->format('M d') }}</div>
         </div>
-        <span class="tag">{{ $b->status }}</span>
+        <span class="tag">{{ $m->role }}</span>
       </div>
-    @endforeach
+    @empty
+      <p class="dash-empty">No members.</p>
+    @endforelse
   </div>
-@endif
+</div>
 
 @endsection

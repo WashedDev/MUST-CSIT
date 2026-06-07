@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Article;
+use App\Models\Election;
+use App\Models\Event;
+use App\Models\User;
+
 class PageController extends Controller
 {
     public function landing()
@@ -11,24 +16,37 @@ class PageController extends Controller
 
     public function dashboard()
     {
-        $stats = [
-            'members'        => 248,
-            'upcoming_events'=> 4,
-            'projects'       => 12,
-            'workshops'      => 6,
-        ];
-        return view('pages.dashboard', compact('stats'));
-    }
+        $user = auth()->user();
 
-    public function events()
-    {
-        $events = [
-            ['title' => 'Intro to AI Workshop', 'date' => 'Jun 12, 2026', 'location' => 'MUST Lab A', 'tag' => 'Workshop'],
-            ['title' => 'CSIT Hackathon 2026',  'date' => 'Jul 04, 2026', 'location' => 'Main Hall',  'tag' => 'Hackathon'],
-            ['title' => 'Cybersecurity Talk',   'date' => 'Aug 21, 2026', 'location' => 'Auditorium', 'tag' => 'Talk'],
-            ['title' => 'Open Source Day',      'date' => 'Sep 30, 2026', 'location' => 'Lab B',      'tag' => 'Community'],
+        $upcomingEvents = Event::where('date', '>=', now())
+            ->orderBy('date')->limit(3)->get();
+
+        $latestArticles = Article::latest('published_at')
+            ->with('author')->limit(3)->get();
+
+        if ($user->isAdmin()) {
+            $stats = [
+                'members'          => User::count(),
+                'upcoming_events'  => Event::where('date', '>=', now())->count(),
+                'active_elections' => Election::where('status', 'active')->count(),
+                'articles'         => Article::count(),
+            ];
+
+            $recentMembers = User::latest()->limit(5)->get();
+
+            return view('pages.dashboard-admin', compact('stats', 'upcomingEvents', 'latestArticles', 'recentMembers'));
+        }
+
+        $myBookings = $user->bookings()->with('event')->latest()->limit(3)->get();
+
+        $stats = [
+            'my_bookings'      => $user->bookings()->count(),
+            'upcoming_events'  => Event::where('date', '>=', now())->count(),
+            'active_elections' => Election::where('status', 'active')->count(),
+            'new_articles'     => Article::where('published_at', '>=', now()->subMonth())->count(),
         ];
-        return view('pages.events', compact('events'));
+
+        return view('pages.dashboard', compact('stats', 'upcomingEvents', 'latestArticles', 'myBookings'));
     }
 
     public function profile()
