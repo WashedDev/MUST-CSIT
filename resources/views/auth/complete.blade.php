@@ -1,40 +1,45 @@
 @extends('layouts.app')
 @section('title','Complete Registration — MUST CSIT Society')
 @section('content')
-<div class="auth-wrap">
-  <div class="auth-card wide">
-    <div class="auth-logo">
-      <div class="logo" style="width:70px;height:70px;border-radius:50%;background:var(--must-red);color:var(--must-blue-dark);display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-weight:700;border:3px solid var(--must-blue);overflow:hidden">
+<div class="auth-page">
+  <div class="auth-card auth-card-wide">
+    <div class="auth-card-inner">
+      <div class="auth-logo">
         @if(file_exists(public_path('images/csit-logo.jpg')))
-          <img src="{{ asset('images/csit-logo.jpg') }}" alt="CSIT" style="width:100%;height:100%;border-radius:50%;object-fit:cover">
-        @else CSIT @endif
+          <img src="{{ asset('images/csit-logo.jpg') }}" alt="CSIT Society">
+        @else
+          <span>CS</span>
+        @endif
       </div>
+      <h1>Almost there!</h1>
+      <p class="sub">Just a few more details to complete your account.</p>
     </div>
-    <h1>Almost there!</h1>
-    <p class="sub">Just a few more details to complete your account.</p>
 
     <div class="oauth-preview">
       <div><strong>{{ session('oauth')['firstname'] }} {{ session('oauth')['lastname'] }}</strong></div>
-      <div style="color:var(--muted);font-size:.9rem">{{ session('oauth')['email'] }}</div>
+      <div style="color:var(--ink-secondary);font-size:0.88rem">{{ session('oauth')['email'] }}</div>
     </div>
 
     @if($errors->any())
-      <div class="errors"><ul>@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>
+      <div class="errors" role="alert">
+        <ul>@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+      </div>
     @endif
 
-    <form method="POST" action="{{ route('auth.complete.submit') }}">@csrf
+    <form method="POST" action="{{ route('auth.complete.submit') }}">
+      @csrf
       <div class="form-row">
-        <label>Programme</label>
-        <input type="text" name="programme" value="{{ old('programme') }}" placeholder="e.g. BSc Computer Science" required>
+        <label for="programme">Programme</label>
+        <input type="text" id="programme" name="programme" value="{{ old('programme') }}" placeholder="e.g. BSc Computer Science" required>
       </div>
       <div class="form-row">
-        <label>Year of Study</label>
-        <select name="year" required>
-          <option value="">Select…</option>
+        <label for="year">Year of Study</label>
+        <select id="year" name="year" required>
+          <option value="">Select&hellip;</option>
           @for($i=1;$i<=6;$i++)<option value="{{$i}}" @selected(old('year')==$i)>Year {{$i}}</option>@endfor
         </select>
       </div>
-      <button type="submit" class="btn btn-gold btn-block">Complete Registration</button>
+      <button type="submit" class="btn btn-accent btn-block">Complete Registration</button>
     </form>
   </div>
 </div>

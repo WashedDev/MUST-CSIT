@@ -3,7 +3,9 @@
 @section('content')
 
 <div class="dash-header">
-  <h1>Edit Member — {{ $member->name }}</h1>
+  <div class="dash-header-text">
+    <h1>Edit Member &mdash; {{ $member->name }}</h1>
+  </div>
 </div>
 
 <div class="dash-card" style="max-width:540px">
@@ -11,37 +13,39 @@
     @csrf @method('PUT')
 
     <div class="form-group">
-      <label>First Name</label>
-      <input type="text" name="firstname" value="{{ old('firstname', $member->firstname) }}" required>
+      <label for="firstname">First Name</label>
+      <input type="text" id="firstname" name="firstname" value="{{ old('firstname', $member->firstname) }}" required>
     </div>
 
     <div class="form-group">
-      <label>Last Name</label>
-      <input type="text" name="lastname" value="{{ old('lastname', $member->lastname) }}" required>
+      <label for="lastname">Last Name</label>
+      <input type="text" id="lastname" name="lastname" value="{{ old('lastname', $member->lastname) }}" required>
     </div>
 
     <div class="form-group">
-      <label>Email</label>
-      <input type="email" name="email" value="{{ old('email', $member->email) }}" required>
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" value="{{ old('email', $member->email) }}" required>
     </div>
 
     <div class="form-group">
-      <label>Registration Number</label>
-      <input type="text" name="reg_number" value="{{ old('reg_number', $member->reg_number) }}">
+      <label for="reg_number">Registration Number</label>
+      <input type="text" id="reg_number" name="reg_number" value="{{ old('reg_number', $member->reg_number) }}">
     </div>
 
     <div class="form-group">
-      <label>Programme</label>
-      <input type="text" name="programme" value="{{ old('programme', $member->programme) }}">
+      <label for="programme">Programme</label>
+      <input type="text" id="programme" name="programme" value="{{ old('programme', $member->programme) }}">
     </div>
 
     <div class="form-group">
-      <label>Year</label>
-      <input type="text" name="year" value="{{ old('year', $member->year) }}">
+      <label for="year">Year</label>
+      <input type="text" id="year" name="year" value="{{ old('year', $member->year) }}">
     </div>
 
-    <button class="btn btn-primary" type="submit">Update</button>
-    <a href="{{ route('admin.members.index') }}" class="btn btn-outline">Cancel</a>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" type="submit">Update Member</button>
+      <a href="{{ route('admin.members.index') }}" class="btn btn-outline">Cancel</a>
+    </div>
   </form>
 </div>
 

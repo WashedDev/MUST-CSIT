@@ -9,65 +9,70 @@
 </head>
 <body>
 
-<div class="topstrip">
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<div class="topstrip" role="region" aria-label="University information">
   <div class="container">
     <span>Malawi University of Science and Technology — CSIT Society</span>
     <span>
-      <a href="https://www.must.ac.mw/" target="_blank" rel="noopener">MUST Main Site</a>
+      <a href="https://www.must.ac.mw/" target="_blank" rel="noopener noreferrer">MUST Main Site</a>
       <a href="mailto:csit@must.ac.mw">csit@must.ac.mw</a>
     </span>
   </div>
 </div>
 
-<header class="site-header">
+<header class="site-header" role="banner">
   <div class="container">
-    <a href="{{ route('landing') }}" class="brand">
-      <div class="logo" title="MUST logo">
-        @if(file_exists(public_path('images/must-logo.jpg')))
-          <img src="{{ asset('images/must-logo.jpg') }}" alt="MUST logo">
-        @else MUST @endif
-      </div>
-      <div class="logo" title="CSIT logo" style="background:var(--must-red);color:var(--must-blue-dark)">
+    <a href="{{ route('landing') }}" class="brand" aria-label="CSIT Society Home">
+      <div class="brand-logo" aria-hidden="true">
         @if(file_exists(public_path('images/csit-logo.jpg')))
-          <img src="{{ asset('images/csit-logo.jpg') }}" alt="CSIT logo">
-        @else CSIT @endif
+          <img src="{{ asset('images/csit-logo.jpg') }}" alt="">
+        @else
+          <span>CS</span>
+        @endif
       </div>
-      <div class="titles">
-        <span class="t1">CSIT Society</span>
-        <span class="t2">MUST · Ndata</span>
+      <div class="brand-text">
+        <span class="brand-title">CSIT Society</span>
+        <span class="brand-subtitle">MUST · Ndata</span>
       </div>
     </a>
-    <nav class="primary">
-      <a href="{{ route('landing') }}" class="{{ request()->routeIs('landing') ? 'active' : '' }}">Home</a>
+
+    <nav class="primary" id="primaryNav" aria-label="Main navigation">
+      <a href="{{ route('landing') }}" class="{{ request()->routeIs('landing') ? 'active' : '' }}" aria-current="{{ request()->routeIs('landing') ? 'page' : 'false' }}">Home</a>
       @auth
-        <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
-        <a href="{{ route('articles.index') }}" class="{{ request()->routeIs('articles.*') ? 'active' : '' }}">News</a>
-        <a href="{{ route('elections.index') }}" class="{{ request()->routeIs('elections.*') ? 'active' : '' }}">Elections</a>
-        <a href="{{ route('events.index') }}" class="{{ request()->routeIs('events.*') ? 'active' : '' }}">Events</a>
-        <a href="{{ route('documents.index') }}" class="{{ request()->routeIs('documents.*') ? 'active' : '' }}">Repository</a>
+        <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}" aria-current="{{ request()->routeIs('dashboard') ? 'page' : 'false' }}">Dashboard</a>
+        <a href="{{ route('articles.index') }}" class="{{ request()->routeIs('articles.*') ? 'active' : '' }}" aria-current="{{ request()->routeIs('articles.*') ? 'page' : 'false' }}">News</a>
+        <a href="{{ route('events.index') }}" class="{{ request()->routeIs('events.*') || request()->routeIs('elections.*') ? 'active' : '' }}" aria-current="{{ request()->routeIs('events.*') ? 'page' : 'false' }}">Events</a>
+        <a href="{{ route('documents.index') }}" class="{{ request()->routeIs('documents.*') ? 'active' : '' }}" aria-current="{{ request()->routeIs('documents.*') ? 'page' : 'false' }}">Repository</a>
         @if(auth()->user()->isAdmin())
-          <a href="{{ route('admin.members.index') }}" class="{{ request()->routeIs('admin.members.*') ? 'active' : '' }}">Members</a>
+          <a href="{{ route('admin.members.index') }}" class="{{ request()->routeIs('admin.members.*') ? 'active' : '' }}" aria-current="{{ request()->routeIs('admin.members.*') ? 'page' : 'false' }}">Members</a>
         @endif
-        <a href="{{ route('profile') }}" class="{{ request()->routeIs('profile') ? 'active' : '' }}">Profile</a>
-        <form method="POST" action="{{ route('logout') }}" style="margin:0">@csrf
-          <button class="btn btn-outline" type="submit">Logout</button>
+        <a href="{{ route('profile') }}" class="{{ request()->routeIs('profile') ? 'active' : '' }}" aria-current="{{ request()->routeIs('profile') ? 'page' : 'false' }}">Profile</a>
+        <form method="POST" action="{{ route('logout') }}" style="display:inline;margin:0">@csrf
+          <button class="btn btn-ghost btn-sm" type="submit">Logout</button>
         </form>
       @else
         <a href="{{ route('login') }}">Login</a>
-        <a href="{{ route('register') }}" class="btn btn-gold">Join Society</a>
+        <a href="{{ route('register') }}" class="btn btn-accent btn-sm">Join Society</a>
       @endauth
     </nav>
+
+    <button class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation menu" aria-expanded="false">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
   </div>
 </header>
 
-@yield('content')
+<main id="main-content" role="main">
+  @yield('content')
+</main>
 
-<footer>
+<footer role="contentinfo">
   <div class="container">
     <div class="grid-4">
       <div>
         <h4>CSIT Society</h4>
-        <p style="color:#9ca3af;font-size:.9rem;margin:0">The Computer Science & IT Society at the Malawi University of Science and Technology.</p>
+        <p>The Computer Science & IT Society at the Malawi University of Science and Technology.</p>
       </div>
       <div>
         <h4>Explore</h4>
@@ -77,18 +82,30 @@
       </div>
       <div>
         <h4>University</h4>
-        <a href="https://www.must.ac.mw/" target="_blank" rel="noopener">MUST Home</a>
-        <a href="https://www.must.ac.mw/" target="_blank" rel="noopener">Faculty of Computing</a>
+        <a href="https://www.must.ac.mw/" target="_blank" rel="noopener noreferrer">MUST Home</a>
+        <a href="https://www.must.ac.mw/" target="_blank" rel="noopener noreferrer">Faculty of Computing</a>
       </div>
       <div>
         <h4>Contact</h4>
         <a href="mailto:csit@must.ac.mw">csit@must.ac.mw</a>
-        <span style="color:#9ca3af;font-size:.9rem">P.O. Box 5196, Limbe</span>
+        <span class="text-muted mt-1">P.O. Box 5196, Limbe</span>
       </div>
     </div>
-    <div class="copy">© {{ date('Y') }} MUST CSIT Society. All rights reserved.</div>
+    <div class="copy">&copy; {{ date('Y') }} MUST CSIT Society. All rights reserved.</div>
   </div>
 </footer>
 
+<script>
+(function() {
+  var nav = document.getElementById('primaryNav');
+  var toggle = document.getElementById('mobileNavToggle');
+
+  toggle.addEventListener('click', function() {
+    nav.classList.toggle('open');
+    var isOpen = nav.classList.contains('open');
+    toggle.setAttribute('aria-expanded', isOpen);
+  });
+})();
+</script>
 </body>
 </html>

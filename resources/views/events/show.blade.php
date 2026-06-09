@@ -3,24 +3,26 @@
 @section('content')
 
 <div class="dash-header">
-  <h1>{{ $event->title }}</h1>
-  <p>{{ $event->date->format('M d, Y') }} · {{ $event->location }}</p>
+  <div class="dash-header-text">
+    <h1>{{ $event->title }}</h1>
+    <p>{{ $event->date->format('M d, Y') }} &middot; {{ $event->location }}</p>
+  </div>
 </div>
 
 @if(session('success'))
-  <div class="alert alert-success">{{ session('success') }}</div>
+  <div class="alert alert-success" role="alert">{{ session('success') }}</div>
 @endif
 
 @if($errors->any())
-  <div class="alert alert-error">{{ $errors->first() }}</div>
+  <div class="alert alert-error" role="alert">{{ $errors->first() }}</div>
 @endif
 
 <div class="dash-card" style="max-width:600px">
   <p>{{ $event->description }}</p>
 
-  <div style="margin:20px 0;padding:16px;background:var(--bg);border-radius:8px">
-    <strong>Capacity:</strong> {{ $event->bookings_count }} / {{ $event->capacity }} booked
-    @if($event->tag) · <span class="tag">{{ $event->tag }}</span> @endif
+  <div style="margin:20px 0;padding:16px;background:var(--surface-alt);border-radius:var(--radius-sm);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <span><strong>Capacity:</strong> {{ $event->bookings_count }} / {{ $event->capacity }} booked</span>
+    @if($event->tag) <span class="tag">{{ $event->tag }}</span> @endif
   </div>
 
   @if($userBooking)
@@ -37,13 +39,13 @@
     </form>
 
   @elseif($event->date->isPast())
-    <p style="color:var(--muted)">This event has already taken place.</p>
+    <p style="color:var(--ink-secondary)">This event has already taken place.</p>
 
   @else
-    <p style="color:var(--muted)">No seats available.</p>
+    <p style="color:var(--ink-secondary)">No seats available.</p>
   @endif
 </div>
 
-<p style="margin-top:24px"><a href="{{ route('events.index') }}">← Back to events</a></p>
+<p style="margin-top:24px"><a href="{{ route('events.index') }}">&larr; Back to events</a></p>
 
 @endsection
