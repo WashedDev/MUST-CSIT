@@ -19,6 +19,8 @@ class User extends Authenticatable
         'programme',
         'year',
         'role',
+        'membership_paid',
+        'paid_at',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -28,6 +30,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
+            'membership_paid'   => 'boolean',
+            'paid_at'           => 'datetime',
         ];
     }
 
@@ -64,5 +68,15 @@ class User extends Authenticatable
     public function documents()
     {
         return $this->hasMany(Document::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function merchPurchases()
+    {
+        return $this->hasMany(MerchPurchase::class);
     }
 }

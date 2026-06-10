@@ -37,6 +37,16 @@
       <div class="v">{{ auth()->user()->email }}</div>
     </div>
     <div class="row">
+      <div class="k">Membership</div>
+      <div class="v">
+        @if(auth()->user()->membership_paid)
+          <span class="tag" style="background:#dcfce7;color:#16A34A">Paid</span>
+        @else
+          <span class="tag" style="background:#fef9c3;color:#A16207">Unpaid</span>
+        @endif
+      </div>
+    </div>
+    <div class="row">
       <div class="k">Member Since</div>
       <div class="v">{{ auth()->user()->created_at?->format('M Y') }}</div>
     </div>

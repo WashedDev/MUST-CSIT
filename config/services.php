@@ -41,4 +41,9 @@ return [
         'redirect'      => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'ctechpay' => [
+        'token'    => env('CTECHPAY_TOKEN'),
+        'base_url' => env('CTECHPAY_BASE_URL', 'https://new-api.ctechpay.com'),
+    ],
+
 ];

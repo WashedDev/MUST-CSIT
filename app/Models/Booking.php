@@ -24,4 +24,14 @@ class Booking extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->status === 'confirmed' && $this->payment()->where('status', 'completed')->exists();
+    }
 }

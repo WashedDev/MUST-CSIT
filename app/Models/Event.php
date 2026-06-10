@@ -14,14 +14,21 @@ class Event extends Model
         'date',
         'location',
         'capacity',
+        'price',
         'tag',
     ];
 
     protected function casts(): array
     {
         return [
-            'date' => 'datetime',
+            'date'  => 'datetime',
+            'price' => 'decimal:2',
         ];
+    }
+
+    public function isPaid(): bool
+    {
+        return ! is_null($this->price) && $this->price > 0;
     }
 
     public function bookings()

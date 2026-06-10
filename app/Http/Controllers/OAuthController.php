@@ -79,6 +79,6 @@ class OAuthController extends Controller
         session()->forget('oauth');
 
         Auth::login($user);
-        return redirect()->route('dashboard');
+        return redirect()->route('payment.show');
     }
 }

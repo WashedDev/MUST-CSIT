@@ -43,8 +43,19 @@
         <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}" aria-current="{{ request()->routeIs('dashboard') ? 'page' : 'false' }}">Dashboard</a>
         <a href="{{ route('articles.index') }}" class="{{ request()->routeIs('articles.*') ? 'active' : '' }}" aria-current="{{ request()->routeIs('articles.*') ? 'page' : 'false' }}">News</a>
         <a href="{{ route('events.index') }}" class="{{ request()->routeIs('events.*') || request()->routeIs('elections.*') ? 'active' : '' }}" aria-current="{{ request()->routeIs('events.*') ? 'page' : 'false' }}">Events</a>
+        <a href="{{ route('merch.index') }}" class="{{ request()->routeIs('merch.index') || request()->routeIs('merch.show') ? 'active' : '' }}" aria-current="{{ request()->routeIs('merch.index') || request()->routeIs('merch.show') ? 'page' : 'false' }}">Merch Store</a>
+          <a href="{{ route('merch.cart') }}" class="{{ request()->routeIs('merch.cart') ? 'active' : '' }}" aria-current="{{ request()->routeIs('merch.cart') ? 'page' : 'false' }}">
+            Cart
+            @php $cartCount = count(session()->get('cart', [])); @endphp
+            @if($cartCount > 0)
+              <span style="display:inline-block;background:var(--accent);color:#fff;font-size:0.65rem;font-weight:700;width:18px;height:18px;border-radius:50%;text-align:center;line-height:18px;margin-left:4px;vertical-align:middle">{{ $cartCount }}</span>
+            @endif
+          </a>
         <a href="{{ route('documents.index') }}" class="{{ request()->routeIs('documents.*') ? 'active' : '' }}" aria-current="{{ request()->routeIs('documents.*') ? 'page' : 'false' }}">Repository</a>
         @if(auth()->user()->isAdmin())
+          <a href="{{ route('admin.events.index') }}" class="{{ request()->routeIs('admin.events.*') ? 'active' : '' }}" aria-current="{{ request()->routeIs('admin.events.*') ? 'page' : 'false' }}">Events</a>
+          <a href="{{ route('admin.merch.index') }}" class="{{ request()->routeIs('admin.merch.*') ? 'active' : '' }}" aria-current="{{ request()->routeIs('admin.merch.*') ? 'page' : 'false' }}">Merch</a>
+          <a href="{{ route('admin.payments.index') }}" class="{{ request()->routeIs('admin.payments.*') ? 'active' : '' }}" aria-current="{{ request()->routeIs('admin.payments.*') ? 'page' : 'false' }}">Payments</a>
           <a href="{{ route('admin.members.index') }}" class="{{ request()->routeIs('admin.members.*') ? 'active' : '' }}" aria-current="{{ request()->routeIs('admin.members.*') ? 'page' : 'false' }}">Members</a>
         @endif
         <a href="{{ route('profile') }}" class="{{ request()->routeIs('profile') ? 'active' : '' }}" aria-current="{{ request()->routeIs('profile') ? 'page' : 'false' }}">Profile</a>

@@ -62,7 +62,7 @@ class AuthController extends Controller
         ]);
 
         Auth::login($user);
-        return redirect()->route('dashboard');
+        return redirect()->route('payment.show');
     }
 
     public function logout(Request $request)

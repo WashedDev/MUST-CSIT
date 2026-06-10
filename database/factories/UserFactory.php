@@ -23,8 +23,16 @@ class UserFactory extends Factory
             'programme'          => fake()->randomElement(['Computer Science', 'Information Technology', 'Software Engineering']),
             'year'               => (string) fake()->numberBetween(1, 4),
             'role'               => 'member',
+            'membership_paid'    => true,
             'remember_token'     => Str::random(10),
         ];
+    }
+
+    public function unpaid(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'membership_paid' => false,
+        ]);
     }
 
     public function unverified(): static

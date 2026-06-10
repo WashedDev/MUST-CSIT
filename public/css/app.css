@@ -1649,6 +1649,49 @@ footer .copy {
 .gap-8 { gap: 2rem; }
 
 /* ============================================================
+   MERCH STORE
+   ============================================================ */
+.merch-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: box-shadow .2s, transform .2s;
+}
+.merch-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,.08);
+  transform: translateY(-2px);
+}
+.merch-card-img {
+  height: 200px;
+  overflow: hidden;
+  background: var(--surface-alt);
+}
+.merch-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.merch-card-body {
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.merch-card-body h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+.merch-card-price {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--primary);
+  margin-top: 4px;
+}
+
+/* ============================================================
    PRINT STYLES
    ============================================================ */
 @media print {
