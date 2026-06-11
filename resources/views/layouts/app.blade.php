@@ -110,12 +110,17 @@
 (function() {
   var nav = document.getElementById('primaryNav');
   var toggle = document.getElementById('mobileNavToggle');
-
-  toggle.addEventListener('click', function() {
-    nav.classList.toggle('open');
-    var isOpen = nav.classList.contains('open');
-    toggle.setAttribute('aria-expanded', isOpen);
-  });
+  if (nav && toggle) {
+    toggle.addEventListener('click', function() {
+      nav.classList.toggle('open');
+      var isOpen = nav.classList.contains('open');
+      toggle.setAttribute('aria-expanded', isOpen);
+    });
+  }
+  // Restore dark mode
+  if (localStorage.getItem('theme') === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
 })();
 </script>
 </body>

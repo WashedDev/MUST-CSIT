@@ -12,6 +12,7 @@ class MerchItem extends Model
         'price',
         'stock',
         'image',
+        'images',
         'is_active',
     ];
 
@@ -20,6 +21,7 @@ class MerchItem extends Model
         return [
             'price'     => 'decimal:2',
             'is_active' => 'boolean',
+            'images'    => 'array',
         ];
     }
 
@@ -36,5 +38,22 @@ class MerchItem extends Model
     public function imageUrl(): ?string
     {
         return $this->image ? asset('storage/' . $this->image) : null;
+    }
+
+    public function allImages(): array
+    {
+        $urls = [];
+
+        if ($this->image) {
+            $urls[] = $this->imageUrl();
+        }
+
+        if ($this->images) {
+            foreach ($this->images as $path) {
+                $urls[] = asset('storage/' . $path);
+            }
+        }
+
+        return $urls;
     }
 }

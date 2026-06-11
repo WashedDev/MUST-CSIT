@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class ArticleController extends Controller
@@ -36,6 +38,19 @@ class ArticleController extends Controller
 
         Article::create($data);
 
+        // Notify all members
+        User::chunk(100, function ($users) use ($data) {
+            foreach ($users as $user) {
+                Notification::notify(
+                    $user->id,
+                    'new_article',
+                    $data['title'],
+                    'A new article has been published.',
+                    route('articles.index')
+                );
+            }
+        });
+
         return redirect()->route('articles.index')
             ->with('success', 'Article published.');
     }
@@ -43,5 +58,12 @@ class ArticleController extends Controller
     public function show(Article $article)
     {
         return view('articles.show', compact('article'));
+    }
+
+    public function details(Article $article)
+    {
+        $html = view('articles.modal-content', compact('article'))->render();
+
+        return response()->json(['html' => $html]);
     }
 }

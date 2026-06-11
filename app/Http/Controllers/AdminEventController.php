@@ -25,11 +25,12 @@ class AdminEventController extends Controller
             'description' => 'nullable|string',
             'date'        => 'required|date|after:now',
             'location'    => 'required|string|max:255',
-            'capacity'    => 'required|integer|min:0',
+            'capacity'    => 'nullable|integer|min:0',
             'price'       => 'nullable|numeric|min:0',
             'tag'         => 'nullable|string|max:255',
         ]);
 
+        $data['capacity'] = $data['capacity'] !== null && $data['capacity'] !== '' ? (int) $data['capacity'] : 0;
         $data['price'] = $data['price'] !== null && $data['price'] !== '' ? $data['price'] : null;
 
         Event::create($data);
@@ -50,11 +51,12 @@ class AdminEventController extends Controller
             'description' => 'nullable|string',
             'date'        => 'required|date',
             'location'    => 'required|string|max:255',
-            'capacity'    => 'required|integer|min:0',
+            'capacity'    => 'nullable|integer|min:0',
             'price'       => 'nullable|numeric|min:0',
             'tag'         => 'nullable|string|max:255',
         ]);
 
+        $data['capacity'] = $data['capacity'] !== null && $data['capacity'] !== '' ? (int) $data['capacity'] : 0;
         $data['price'] = $data['price'] !== null && $data['price'] !== '' ? $data['price'] : null;
 
         $event->update($data);

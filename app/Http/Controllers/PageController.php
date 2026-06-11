@@ -11,7 +11,16 @@ class PageController extends Controller
 {
     public function landing()
     {
-        return view('pages.landing');
+        $events = null;
+        if (auth()->check()) {
+            $events = Event::where('date', '>=', now())
+                ->withExists(['bookings as user_booked' => fn($q) => $q->where('user_id', auth()->id())])
+                ->orderByDesc('user_booked')
+                ->orderBy('date')
+                ->limit(6)
+                ->get();
+        }
+        return view('pages.landing', compact('events'));
     }
 
     public function dashboard()
@@ -47,6 +56,19 @@ class PageController extends Controller
         ];
 
         return view('pages.dashboard', compact('stats', 'upcomingEvents', 'latestArticles', 'myBookings'));
+    }
+
+    public function toggleLayout()
+    {
+        if (auth()->user()->isAdmin()) {
+            session()->forget('layout');
+            return back();
+        }
+
+        $current = session('layout', 'sidebar');
+        session(['layout' => $current === 'sidebar' ? 'topbar' : 'sidebar']);
+
+        return back();
     }
 
     public function profile()

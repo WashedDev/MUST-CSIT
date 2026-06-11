@@ -10,10 +10,6 @@
   <a href="{{ route('admin.merch.create') }}" class="btn btn-primary">Add Item</a>
 </div>
 
-@if(session('success'))
-  <div class="alert alert-success" role="alert">{{ session('success') }}</div>
-@endif
-
 <div class="dash-card" style="padding:0">
   <div class="dash-table-wrap">
     <table class="dash-table">

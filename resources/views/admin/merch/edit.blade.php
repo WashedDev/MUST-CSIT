@@ -38,7 +38,7 @@
     </div>
 
     <div class="form-group">
-      <label for="image">Image</label>
+      <label for="image">Main Image</label>
       @if($merchItem->image)
         <div style="margin-bottom:8px">
           <img src="{{ $merchItem->imageUrl() }}" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:var(--radius-sm)">
@@ -46,6 +46,19 @@
       @endif
       <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp">
       @error('image') <span class="form-error">{{ $message }}</span> @enderror
+    </div>
+
+    <div class="form-group">
+      <label for="images">Additional Images</label>
+      @if($merchItem->images)
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          @foreach($merchItem->images as $img)
+            <img src="{{ asset('storage/' . $img) }}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:var(--radius-sm)">
+          @endforeach
+        </div>
+      @endif
+      <input type="file" id="images" name="images[]" accept="image/jpeg,image/png,image/webp" multiple>
+      @error('images.*') <span class="form-error">{{ $message }}</span> @enderror
     </div>
 
     <div class="form-group">

@@ -64,7 +64,7 @@
         <div class="dash-list-date"><strong>{{ $e->date->format('j') }}</strong>{{ $e->date->format('M') }}</div>
         <div style="flex:1">
           <strong style="font-size:0.9rem">{{ $e->title }}</strong>
-          <div class="dash-list-meta">{{ $e->location }} &middot; {{ $e->availableSeats() }}/{{ $e->capacity }} seats</div>
+          <div class="dash-list-meta">{{ $e->location }} &middot; @if($e->hasUnlimitedCapacity())Unlimited seats@else{{ $e->availableSeats() }}/{{ $e->capacity }} seats@endif</div>
         </div>
       </div>
     @empty

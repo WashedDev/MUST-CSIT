@@ -1,0 +1,23 @@
+Remaining UX features to implement:
+
+1. Client-side form validation
+   - Inline validation for registration, booking, and checkout forms
+   - Real-time error messages (not just server errors)
+
+2. Cart persistence in DB
+   - Store cart in a database table with user_id instead of session
+   - Survives logout/login and works across devices
+
+3. Document preview
+   - Let members preview PDF/docx files in-browser before downloading from the repository
+
+4. Email / SMS reminders
+   - Automatic reminder 24h before a booked event
+   - Can use Laravel notifications + scheduler
+
+5. Onboarding wizard
+   - First-login flow for new members
+   - Steps: complete profile → browse events → visit merch store
+
+6. Global search (last)
+   - Wire up the search bar to search events, articles, merch, documents, and members

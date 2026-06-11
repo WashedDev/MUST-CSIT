@@ -17,6 +17,20 @@
     <div style="margin-top:18px">
       <a href="#" class="btn btn-outline btn-block">Edit Profile</a>
     </div>
+    @unless(auth()->user()->isAdmin())
+      <div style="margin-top:10px">
+        <form method="POST" action="{{ route('layout.toggle') }}">@csrf
+          <button class="btn btn-ghost btn-block btn-sm" type="submit" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="22" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+            @if(session('layout', 'sidebar') === 'sidebar')
+              Switch to Topbar
+            @else
+              Switch to Sidebar
+            @endif
+          </button>
+        </form>
+      </div>
+    @endunless
   </div>
 
   <div class="info-list">

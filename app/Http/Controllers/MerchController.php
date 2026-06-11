@@ -12,7 +12,6 @@ class MerchController extends Controller
     public function index()
     {
         $items = MerchItem::where('is_active', true)
-            ->where('stock', '>', 0)
             ->latest()
             ->paginate(12);
 
@@ -26,6 +25,49 @@ class MerchController extends Controller
         }
 
         return view('merch.show', compact('merchItem'));
+    }
+
+    public function details(MerchItem $merchItem)
+    {
+        if (! $merchItem->is_active) {
+            abort(404);
+        }
+
+        $html = view('merch.modal-content', compact('merchItem'))->render();
+
+        return response()->json(['html' => $html]);
+    }
+
+    public function addToCartJson(Request $request, MerchItem $merchItem)
+    {
+        if (! $merchItem->is_active || ! $merchItem->inStock()) {
+            return response()->json(['error' => 'This item is not available.'], 422);
+        }
+
+        $data = $request->validate([
+            'quantity' => 'required|integer|min:1|max:' . $merchItem->stock,
+        ]);
+
+        $cart = session()->get('cart', []);
+
+        if (isset($cart[$merchItem->id])) {
+            $newQty = $cart[$merchItem->id]['quantity'] + (int) $data['quantity'];
+            $cart[$merchItem->id]['quantity'] = min($newQty, $merchItem->stock);
+        } else {
+            $cart[$merchItem->id] = [
+                'item_id'  => $merchItem->id,
+                'quantity' => (int) $data['quantity'],
+            ];
+        }
+
+        session()->put('cart', $cart);
+
+        $cartCount = array_sum(array_column($cart, 'quantity'));
+
+        return response()->json([
+            'success'    => $merchItem->name . ' added to cart.',
+            'cart_count' => $cartCount,
+        ]);
     }
 
     public function addToCart(Request $request, MerchItem $merchItem)

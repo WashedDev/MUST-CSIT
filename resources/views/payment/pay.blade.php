@@ -9,10 +9,6 @@
   </div>
 </div>
 
-@if(session('info'))
-  <div class="alert alert-success" role="alert">{{ session('info') }}</div>
-@endif
-
 @if($errors->any())
   <div class="errors" role="alert">
     <ul>@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>

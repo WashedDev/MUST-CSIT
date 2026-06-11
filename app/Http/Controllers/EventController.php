@@ -5,17 +5,45 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Election;
 use App\Models\Event;
+use App\Models\Notification;
 use App\Models\Payment;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class EventController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $events = Event::withCount('bookings')->latest('date')->paginate(10);
+        $view = $request->query('view', 'grid');
+
+        if ($view === 'calendar') {
+            $month = $request->query('month', now()->format('Y-m'));
+            $date = Carbon::parse($month . '-01');
+            $startOfMonth = $date->copy()->startOfMonth();
+            $endOfMonth = $date->copy()->endOfMonth();
+
+            $events = Event::withCount('bookings')
+                ->withExists(['bookings as user_booked' => fn($q) => $q->where('user_id', auth()->id())])
+                ->whereBetween('date', [$startOfMonth, $endOfMonth])
+                ->orderBy('date')
+                ->get()
+                ->groupBy(fn($e) => $e->date->format('Y-m-d'));
+
+            $elections = Election::withCount('votes')->latest()->get();
+
+            return view('pages.events', compact('events', 'elections', 'view', 'date'));
+        }
+
+        $events = Event::withCount('bookings')
+            ->withExists(['bookings as user_booked' => fn($q) => $q->where('user_id', auth()->id())])
+            ->orderByDesc('user_booked')
+            ->latest('date')
+            ->paginate(10);
+
         $elections = Election::withCount('votes')->latest()->get();
-        return view('pages.events', compact('events', 'elections'));
+
+        return view('pages.events', compact('events', 'elections', 'view'));
     }
 
     public function show(Event $event)
@@ -27,13 +55,24 @@ class EventController extends Controller
         return view('events.show', compact('event', 'userBooking'));
     }
 
+    public function details(Event $event)
+    {
+        $event->loadCount('bookings');
+        $userBooking = Booking::where('event_id', $event->id)
+            ->where('user_id', auth()->id())->first();
+
+        $html = view('events.modal-content', compact('event', 'userBooking'))->render();
+
+        return response()->json(['html' => $html]);
+    }
+
     public function book(Request $request, Event $event)
     {
         if ($event->date->isPast()) {
             return back()->withErrors(['event' => 'This event has already passed.']);
         }
 
-        if ($event->availableSeats() <= 0) {
+        if (! $event->hasUnlimitedCapacity() && $event->availableSeats() <= 0) {
             return back()->withErrors(['event' => 'No seats available for this event.']);
         }
 
@@ -60,6 +99,14 @@ class EventController extends Controller
 
             return $this->initiateEventPayment($payment, $event);
         }
+
+        Notification::notify(
+            auth()->id(),
+            'booking_confirmed',
+            'Booking Confirmed',
+            "You are booked for {$event->title} on {$event->date->format('M d, Y H:i')}.",
+            route('events.show', $event)
+        );
 
         return redirect()->route('events.show', $event)
             ->with('success', 'You have been booked for this event.');
@@ -91,6 +138,14 @@ class EventController extends Controller
             if ($booking) {
                 $booking->update(['status' => 'confirmed']);
             }
+
+            Notification::notify(
+                auth()->id(),
+                'payment_received',
+                'Payment Received',
+                "Your payment for {$event->title} has been confirmed.",
+                route('events.show', $event)
+            );
 
             return redirect()->route('events.show', $event)
                 ->with('success', 'Booking confirmed. (Payment gateway not configured — marked as paid for testing.)');

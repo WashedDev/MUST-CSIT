@@ -9,14 +9,6 @@
   </div>
 </div>
 
-@if(session('success'))
-  <div class="alert alert-success" role="alert">{{ session('success') }}</div>
-@endif
-
-@if(session('info'))
-  <div class="alert alert-success" role="alert">{{ session('info') }}</div>
-@endif
-
 @if($errors->any())
   <div class="alert alert-error" role="alert">{{ $errors->first() }}</div>
 @endif
@@ -25,7 +17,7 @@
   <p>{{ $event->description }}</p>
 
   <div style="margin:20px 0;padding:16px;background:var(--surface-alt);border-radius:var(--radius-sm);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-    <span><strong>Capacity:</strong> {{ $event->bookings_count }} / {{ $event->capacity }} booked</span>
+    <span><strong>Capacity:</strong> {{ $event->hasUnlimitedCapacity() ? 'Unlimited' : $event->bookings_count . ' / ' . $event->capacity . ' booked' }}</span>
     @if($event->isPaid())
       <span class="tag" style="background:#fef9c3;color:#A16207">MWK {{ number_format((float) $event->price) }}</span>
     @endif
@@ -47,7 +39,7 @@
       </form>
     @endif
 
-  @elseif(!$event->date->isPast() && $event->availableSeats() > 0)
+  @elseif(!$event->date->isPast() && ($event->hasUnlimitedCapacity() || $event->availableSeats() > 0))
     <form method="POST" action="{{ route('events.book', $event) }}">
       @csrf
       <button class="btn btn-primary" type="submit">

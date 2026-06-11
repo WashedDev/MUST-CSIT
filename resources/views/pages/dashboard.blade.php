@@ -94,17 +94,63 @@
       </h3>
     </div>
     @foreach($myBookings as $b)
-      <div class="dash-list-item">
-        <div class="dash-list-date"><strong>{{ $b->event->date->format('j') }}</strong>{{ $b->event->date->format('M') }}</div>
+      @php $eventDate = $b->event->date; @endphp
+      <div class="dash-list-item booking-row" data-event-date="{{ $eventDate->toIso8601String() }}">
+        <div class="dash-list-date"><strong>{{ $eventDate->format('j') }}</strong>{{ $eventDate->format('M') }}</div>
         <div style="flex:1">
           <strong style="font-size:0.9rem">{{ $b->event->title }}</strong>
-          <div class="dash-list-meta">{{ $b->status }} &middot; Booked {{ $b->created_at->format('M d') }}</div>
+          <div class="dash-list-meta booking-countdown" style="font-weight:600"></div>
         </div>
-        <span class="tag">{{ $b->status }}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="tag" style="{{ $b->status === 'confirmed' ? 'background:#dcfce7;color:#16A34A' : ($b->status === 'pending_payment' ? 'background:#fef9c3;color:#A16207' : '') }}">{{ ucfirst(str_replace('_', ' ', $b->status)) }}</span>
+          @if(!$eventDate->isPast())
+            <form method="POST" action="{{ route('events.cancel', $b->event) }}" style="display:inline" onsubmit="return confirm('Cancel your booking for {{ $b->event->title }}?')">
+              @csrf
+              <button class="btn btn-ghost btn-sm" type="submit" style="color:var(--accent);font-size:0.72rem;padding:4px 8px">Cancel</button>
+            </form>
+          @endif
+        </div>
       </div>
     @endforeach
   </div>
 @endif
+
+@push('scripts')
+<script>
+(function() {
+  document.querySelectorAll('.booking-row').forEach(function(row) {
+    var dateStr = row.getAttribute('data-event-date');
+    if (!dateStr) return;
+    var eventDate = new Date(dateStr);
+    var countdownEl = row.querySelector('.booking-countdown');
+    if (!countdownEl) return;
+
+    function update() {
+      var now = new Date();
+      var diff = eventDate.getTime() - now.getTime();
+      if (diff <= 0) {
+        countdownEl.textContent = 'Event started';
+        return;
+      }
+      var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+      if (days > 0) {
+        countdownEl.textContent = days + 'd ' + hours + 'h ' + minutes + 'm remaining';
+      } else if (hours > 0) {
+        countdownEl.textContent = hours + 'h ' + minutes + 'm remaining';
+      } else {
+        countdownEl.textContent = minutes + 'm remaining';
+      }
+    }
+
+    update();
+    setInterval(update, 60000);
+  });
+})();
+</script>
+@endpush
 
 <div style="margin-top:24px">
   <div class="dash-card-head" style="margin-bottom:12px">

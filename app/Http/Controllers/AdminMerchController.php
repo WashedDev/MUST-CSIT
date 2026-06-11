@@ -27,11 +27,20 @@ class AdminMerchController extends Controller
             'price'       => 'required|numeric|min:0',
             'stock'       => 'required|integer|min:0',
             'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'images.*'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'is_active'   => 'boolean',
         ]);
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('merch', 'public');
+        }
+
+        if ($request->hasFile('images')) {
+            $paths = [];
+            foreach ($request->file('images') as $img) {
+                $paths[] = $img->store('merch', 'public');
+            }
+            $data['images'] = $paths;
         }
 
         $data['is_active'] = $request->boolean('is_active', true);
@@ -55,6 +64,7 @@ class AdminMerchController extends Controller
             'price'       => 'required|numeric|min:0',
             'stock'       => 'required|integer|min:0',
             'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'images.*'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'is_active'   => 'boolean',
         ]);
 
@@ -65,6 +75,21 @@ class AdminMerchController extends Controller
             $data['image'] = $request->file('image')->store('merch', 'public');
         } else {
             unset($data['image']);
+        }
+
+        if ($request->hasFile('images')) {
+            if ($merchItem->images) {
+                foreach ($merchItem->images as $old) {
+                    Storage::disk('public')->delete($old);
+                }
+            }
+            $paths = [];
+            foreach ($request->file('images') as $img) {
+                $paths[] = $img->store('merch', 'public');
+            }
+            $data['images'] = $paths;
+        } else {
+            unset($data['images']);
         }
 
         $data['is_active'] = $request->boolean('is_active', true);
@@ -79,6 +104,12 @@ class AdminMerchController extends Controller
     {
         if ($merchItem->image) {
             Storage::disk('public')->delete($merchItem->image);
+        }
+
+        if ($merchItem->images) {
+            foreach ($merchItem->images as $old) {
+                Storage::disk('public')->delete($old);
+            }
         }
 
         $merchItem->delete();

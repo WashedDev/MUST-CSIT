@@ -10,10 +10,6 @@
   <a href="{{ route('merch.index') }}" class="btn btn-outline">&larr; Continue Shopping</a>
 </div>
 
-@if(session('success'))
-  <div class="alert alert-success" role="alert">{{ session('success') }}</div>
-@endif
-
 @if($errors->any())
   <div class="alert alert-error" role="alert">{{ $errors->first() }}</div>
 @endif

@@ -21,8 +21,9 @@ class Event extends Model
     protected function casts(): array
     {
         return [
-            'date'  => 'datetime',
-            'price' => 'decimal:2',
+            'date'     => 'datetime',
+            'price'    => 'decimal:2',
+            'capacity' => 'integer',
         ];
     }
 
@@ -36,8 +37,17 @@ class Event extends Model
         return $this->hasMany(Booking::class);
     }
 
-    public function availableSeats(): int
+    public function hasUnlimitedCapacity(): bool
     {
+        return $this->capacity === 0;
+    }
+
+    public function availableSeats(): ?int
+    {
+        if ($this->hasUnlimitedCapacity()) {
+            return null;
+        }
+
         return $this->capacity - $this->bookings()->count();
     }
 }

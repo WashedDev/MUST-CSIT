@@ -16,7 +16,7 @@ class EventFactory extends Factory
             'description' => fake()->paragraph(),
             'date'        => now()->addDays(fake()->numberBetween(1, 60)),
             'location'    => fake()->randomElement(['MUST Lab A', 'Main Hall', 'Auditorium', 'Lab B']),
-            'capacity'    => fake()->numberBetween(20, 100),
+            'capacity'    => fake()->boolean(20) ? 0 : fake()->numberBetween(20, 100),
             'tag'         => fake()->randomElement(['Workshop', 'Hackathon', 'Talk', 'Community']),
         ];
     }

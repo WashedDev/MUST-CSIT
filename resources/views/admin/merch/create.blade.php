@@ -38,9 +38,15 @@
     </div>
 
     <div class="form-group">
-      <label for="image">Image</label>
+      <label for="image">Main Image</label>
       <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp">
       @error('image') <span class="form-error">{{ $message }}</span> @enderror
+    </div>
+
+    <div class="form-group">
+      <label for="images">Additional Images</label>
+      <input type="file" id="images" name="images[]" accept="image/jpeg,image/png,image/webp" multiple>
+      @error('images.*') <span class="form-error">{{ $message }}</span> @enderror
     </div>
 
     <div class="form-group">

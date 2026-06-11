@@ -37,8 +37,8 @@
     </div>
 
     <div class="form-group">
-      <label for="capacity">Capacity</label>
-      <input type="number" id="capacity" name="capacity" value="{{ old('capacity', 0) }}" min="0" required>
+      <label for="capacity">Capacity (leave blank for unlimited)</label>
+      <input type="number" id="capacity" name="capacity" value="{{ old('capacity') }}" min="0" placeholder="Unlimited">
       @error('capacity') <span class="form-error">{{ $message }}</span> @enderror
     </div>
 

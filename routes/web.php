@@ -40,6 +40,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
         Route::get('/events', [EventController::class, 'index'])->name('events.index');
         Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
+        Route::get('/events/{event}/details', [EventController::class, 'details'])->name('events.details');
         Route::post('/events/{event}/book', [EventController::class, 'book'])->name('events.book');
         Route::post('/events/{event}/cancel', [EventController::class, 'cancel'])->name('events.cancel');
 
@@ -47,6 +48,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/articles/create', [ArticleController::class, 'create'])->name('articles.create');
         Route::post('/articles', [ArticleController::class, 'store'])->name('articles.store');
         Route::get('/articles/{article}', [ArticleController::class, 'show'])->name('articles.show');
+        Route::get('/articles/{article}/details', [ArticleController::class, 'details'])->name('articles.details');
 
         Route::get('/profile', [PageController::class, 'profile'])->name('profile');
 
@@ -63,11 +65,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/merch', [MerchController::class, 'index'])->name('merch.index');
         Route::get('/merch/cart', [MerchController::class, 'cart'])->name('merch.cart');
         Route::post('/merch/cart/add/{merchItem}', [MerchController::class, 'addToCart'])->name('merch.cart.add');
+        Route::post('/merch/cart/add-json/{merchItem}', [MerchController::class, 'addToCartJson'])->name('merch.cart.add-json');
         Route::post('/merch/cart/update/{merchItem}', [MerchController::class, 'updateCart'])->name('merch.cart.update');
         Route::post('/merch/cart/remove/{merchItem}', [MerchController::class, 'removeFromCart'])->name('merch.cart.remove');
         Route::post('/merch/cart/checkout', [MerchController::class, 'checkout'])->name('merch.checkout');
         Route::get('/merch/cart/success', [MerchController::class, 'checkoutSuccess'])->name('merch.checkout.success');
         Route::get('/merch/{merchItem}', [MerchController::class, 'show'])->name('merch.show');
+        Route::get('/merch/{merchItem}/details', [MerchController::class, 'details'])->name('merch.details');
 
         Route::middleware('admin')->group(function () {
             Route::get('/admin/members', [AdminMemberController::class, 'index'])->name('admin.members.index');
@@ -93,6 +97,14 @@ Route::middleware('auth')->group(function () {
             Route::delete('/admin/merch/{merchItem}', [AdminMerchController::class, 'destroy'])->name('admin.merch.destroy');
         });
     });
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::get('/notifications/dropdown', [NotificationController::class, 'dropdown'])->name('notifications.dropdown');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+
+    Route::post('/layout/toggle', [PageController::class, 'toggleLayout'])->name('layout.toggle');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
