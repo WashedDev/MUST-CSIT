@@ -57,10 +57,16 @@ Route::middleware('auth')->group(function () {
         Route::post('/elections/{election}/vote', [ElectionController::class, 'vote'])->name('elections.vote');
         Route::get('/elections/{election}/results', [ElectionController::class, 'results'])->name('elections.results');
 
+        Route::get('/onboarding', [OnboardingController::class, 'index'])->name('onboarding.index');
+        Route::post('/onboarding/complete', [OnboardingController::class, 'complete'])->name('onboarding.complete');
+
+        Route::get('/search', [SearchController::class, 'search'])->name('search');
+
         Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
         Route::get('/documents/create', [DocumentController::class, 'create'])->name('documents.create');
         Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
         Route::get('/documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
+        Route::get('/documents/{document}/preview', [DocumentController::class, 'preview'])->name('documents.preview');
 
         Route::get('/merch', [MerchController::class, 'index'])->name('merch.index');
         Route::get('/merch/cart', [MerchController::class, 'cart'])->name('merch.cart');

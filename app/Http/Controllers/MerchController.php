@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CartItem;
 use App\Models\MerchItem;
 use App\Models\MerchPurchase;
 use Illuminate\Http\Request;
@@ -48,21 +49,16 @@ class MerchController extends Controller
             'quantity' => 'required|integer|min:1|max:' . $merchItem->stock,
         ]);
 
-        $cart = session()->get('cart', []);
+        $cartItem = CartItem::firstOrNew([
+            'user_id'      => auth()->id(),
+            'merch_item_id' => $merchItem->id,
+        ]);
 
-        if (isset($cart[$merchItem->id])) {
-            $newQty = $cart[$merchItem->id]['quantity'] + (int) $data['quantity'];
-            $cart[$merchItem->id]['quantity'] = min($newQty, $merchItem->stock);
-        } else {
-            $cart[$merchItem->id] = [
-                'item_id'  => $merchItem->id,
-                'quantity' => (int) $data['quantity'],
-            ];
-        }
+        $newQty = $cartItem->exists ? $cartItem->quantity + (int) $data['quantity'] : (int) $data['quantity'];
+        $cartItem->quantity = min($newQty, $merchItem->stock);
+        $cartItem->save();
 
-        session()->put('cart', $cart);
-
-        $cartCount = array_sum(array_column($cart, 'quantity'));
+        $cartCount = auth()->user()->cartCount();
 
         return response()->json([
             'success'    => $merchItem->name . ' added to cart.',
@@ -80,19 +76,14 @@ class MerchController extends Controller
             'quantity' => 'required|integer|min:1|max:' . $merchItem->stock,
         ]);
 
-        $cart = session()->get('cart', []);
+        $cartItem = CartItem::firstOrNew([
+            'user_id'      => auth()->id(),
+            'merch_item_id' => $merchItem->id,
+        ]);
 
-        if (isset($cart[$merchItem->id])) {
-            $newQty = $cart[$merchItem->id]['quantity'] + (int) $data['quantity'];
-            $cart[$merchItem->id]['quantity'] = min($newQty, $merchItem->stock);
-        } else {
-            $cart[$merchItem->id] = [
-                'item_id'  => $merchItem->id,
-                'quantity' => (int) $data['quantity'],
-            ];
-        }
-
-        session()->put('cart', $cart);
+        $newQty = $cartItem->exists ? $cartItem->quantity + (int) $data['quantity'] : (int) $data['quantity'];
+        $cartItem->quantity = min($newQty, $merchItem->stock);
+        $cartItem->save();
 
         return redirect()->route('merch.cart')
             ->with('success', $merchItem->name . ' added to cart.');
@@ -104,20 +95,18 @@ class MerchController extends Controller
             'quantity' => 'required|integer|min:0|max:' . $merchItem->stock,
         ]);
 
-        $cart = session()->get('cart', []);
-
         $quantity = (int) $data['quantity'];
 
         if ($quantity <= 0) {
-            unset($cart[$merchItem->id]);
+            CartItem::where('user_id', auth()->id())
+                ->where('merch_item_id', $merchItem->id)
+                ->delete();
         } else {
-            $cart[$merchItem->id] = [
-                'item_id'  => $merchItem->id,
-                'quantity' => $quantity,
-            ];
+            CartItem::updateOrCreate(
+                ['user_id' => auth()->id(), 'merch_item_id' => $merchItem->id],
+                ['quantity' => $quantity]
+            );
         }
-
-        session()->put('cart', $cart);
 
         return redirect()->route('merch.cart')
             ->with('success', 'Cart updated.');
@@ -125,11 +114,9 @@ class MerchController extends Controller
 
     public function removeFromCart(MerchItem $merchItem)
     {
-        $cart = session()->get('cart', []);
-
-        unset($cart[$merchItem->id]);
-
-        session()->put('cart', $cart);
+        CartItem::where('user_id', auth()->id())
+            ->where('merch_item_id', $merchItem->id)
+            ->delete();
 
         return redirect()->route('merch.cart')
             ->with('success', $merchItem->name . ' removed from cart.');
@@ -137,27 +124,25 @@ class MerchController extends Controller
 
     public function cart()
     {
-        $cart = session()->get('cart', []);
+        $cartItems = CartItem::where('user_id', auth()->id())
+            ->with('merchItem')
+            ->get();
+
         $items = [];
         $total = 0;
 
-        if (! empty($cart)) {
-            $ids = array_keys($cart);
-            $merchItems = MerchItem::whereIn('id', $ids)->get()->keyBy('id');
+        foreach ($cartItems as $ci) {
+            $item = $ci->merchItem;
+            if (! $item || ! $item->is_active) continue;
 
-            foreach ($cart as $id => $entry) {
-                if (isset($merchItems[$id])) {
-                    $item = $merchItems[$id];
-                    $quantity = min($entry['quantity'], $item->stock);
-                    $subtotal = $item->price * $quantity;
-                    $items[] = [
-                        'item'     => $item,
-                        'quantity' => $quantity,
-                        'subtotal' => $subtotal,
-                    ];
-                    $total += $subtotal;
-                }
-            }
+            $quantity = min($ci->quantity, $item->stock);
+            $subtotal = $item->price * $quantity;
+            $items[] = [
+                'item'     => $item,
+                'quantity' => $quantity,
+                'subtotal' => $subtotal,
+            ];
+            $total += $subtotal;
         }
 
         return view('merch.cart', compact('items', 'total'));
@@ -165,27 +150,26 @@ class MerchController extends Controller
 
     public function checkout()
     {
-        $cart = session()->get('cart', []);
+        $cartItems = CartItem::where('user_id', auth()->id())
+            ->with('merchItem')
+            ->get();
 
-        if (empty($cart)) {
+        if ($cartItems->isEmpty()) {
             return redirect()->route('merch.index')
                 ->withErrors(['cart' => 'Your cart is empty.']);
         }
 
-        $ids = array_keys($cart);
-        $merchItems = MerchItem::whereIn('id', $ids)->get()->keyBy('id');
-
         $purchases = [];
         $totalAmount = 0;
 
-        foreach ($cart as $id => $entry) {
-            $item = $merchItems[$id] ?? null;
+        foreach ($cartItems as $ci) {
+            $item = $ci->merchItem;
 
             if (! $item || ! $item->is_active || $item->stock <= 0) {
                 continue;
             }
 
-            $quantity = min($entry['quantity'], $item->stock);
+            $quantity = min($ci->quantity, $item->stock);
             $amount = $item->price * $quantity;
             $totalAmount += $amount;
 
@@ -231,7 +215,7 @@ class MerchController extends Controller
                 $p->update(['status' => 'completed', 'paid_at' => now()]);
             }
 
-            session()->forget('cart');
+            CartItem::where('user_id', auth()->id())->delete();
 
             return redirect()->route('merch.checkout.success', ['order_ref' => $orderRef])
                 ->with('info', 'Payment gateway not configured. Order marked as completed for testing.');
@@ -287,7 +271,7 @@ class MerchController extends Controller
         $completed = $purchases->every(fn ($p) => $p->status === 'completed');
 
         if ($completed) {
-            session()->forget('cart');
+            CartItem::where('user_id', auth()->id())->delete();
             return view('merch.success', ['purchases' => $purchases, 'orderRef' => $orderRef]);
         }
 
@@ -309,7 +293,7 @@ class MerchController extends Controller
                             $p->update(['status' => 'completed', 'paid_at' => now()]);
                         }
                     }
-                    session()->forget('cart');
+                    CartItem::where('user_id', auth()->id())->delete();
                     return view('merch.success', ['purchases' => $purchases, 'orderRef' => $orderRef]);
                 }
             } catch (\Exception $e) {}
@@ -322,7 +306,7 @@ class MerchController extends Controller
             }
         }
 
-        session()->forget('cart');
+        CartItem::where('user_id', auth()->id())->delete();
 
         return view('merch.success', ['purchases' => $purchases, 'orderRef' => $orderRef]);
     }

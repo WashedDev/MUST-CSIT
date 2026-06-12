@@ -26,6 +26,10 @@
         <div class="dash-list-meta">Uploaded by {{ $doc->uploader->name }} &middot; {{ $doc->created_at->format('M d, Y') }}</div>
       </div>
       <span class="tag">{{ ucfirst($doc->category) }}</span>
+      @php $ext = strtolower(pathinfo($doc->file_path, PATHINFO_EXTENSION)); @endphp
+      @if(in_array($ext, ['pdf', 'doc', 'docx']))
+        <a href="{{ route('documents.preview', $doc) }}" class="btn btn-outline btn-sm">Preview</a>
+      @endif
       <a href="{{ route('documents.download', $doc) }}" class="btn btn-primary btn-sm">Download</a>
     </div>
   @empty

@@ -2100,6 +2100,97 @@ body.dash-body.route-landing .dash-content {
 }
 
 /* ============================================================
+   GLOBAL SEARCH
+   ============================================================ */
+.search-wrapper {
+  position: relative;
+  flex: 0 1 320px;
+}
+.search-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+.search-dropdown.open {
+  display: block;
+}
+.search-dropdown .sd-group-title {
+  padding: 8px 12px 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-400);
+}
+.search-dropdown .sd-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  text-decoration: none;
+  color: var(--ink-900);
+  transition: background 0.15s;
+}
+.search-dropdown .sd-item:hover {
+  background: var(--surface-alt);
+}
+.search-dropdown .sd-item .sd-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-dropdown .sd-item .sd-meta {
+  font-size: 0.75rem;
+  color: var(--ink-500);
+}
+.search-dropdown .sd-item .sd-type {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--primary);
+  flex-shrink: 0;
+  width: 52px;
+  text-align: right;
+}
+.search-dropdown .sd-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--ink-400);
+  font-size: 0.85rem;
+}
+
+/* ============================================================
+   FORM VALIDATION
+   ============================================================ */
+.form-row {
+  position: relative;
+}
+.form-row .field-error {
+  display: none;
+  font-size: 0.75rem;
+  color: var(--accent);
+  margin-top: 4px;
+}
+.form-row.has-error input,
+.form-row.has-error select {
+  border-color: var(--accent) !important;
+}
+.form-row.has-error .field-error {
+  display: block;
+}
+
+/* ============================================================
    TOAST NOTIFICATIONS
    ============================================================ */
 #toast-container {

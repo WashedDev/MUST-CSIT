@@ -16,8 +16,8 @@
   <p style="color:var(--ink-500);margin-top:8px">
     Your membership payment has been received. You now have full access to all society features.
   </p>
-  <a href="{{ route('dashboard') }}" class="btn btn-primary" style="margin-top:24px">
-    Go to Dashboard
+  <a href="{{ route('onboarding.index') }}" class="btn btn-primary" style="margin-top:24px">
+    Get Started
   </a>
 </div>
 

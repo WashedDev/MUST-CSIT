@@ -95,7 +95,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
           </span>
           <span class="nav-label">Cart</span>
-          @php $cartCount = count(session()->get('cart', [])); @endphp
+          @php $cartCount = auth()->user()->cartCount(); @endphp
           @if($cartCount > 0)
             <span class="cart-badge" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);background:var(--primary);color:#fff;font-size:0.7rem;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center">{{ $cartCount }}</span>
           @endif
@@ -161,11 +161,14 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
 
-        <div class="topbar-search" role="search">
-          <span class="search-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          </span>
-          <input type="search" placeholder="Search..." aria-label="Search">
+        <div class="search-wrapper">
+          <div class="topbar-search" role="search">
+            <span class="search-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </span>
+            <input type="search" id="global-search" placeholder="Search events, articles, merch, documents&hellip;" aria-label="Search" autocomplete="off">
+          </div>
+          <div class="search-dropdown" id="search-dropdown"></div>
         </div>
 
         <div class="topbar-right">
@@ -189,7 +192,7 @@
 
           <a href="{{ route('merch.cart') }}" class="topbar-btn" title="Shopping cart" aria-label="Shopping cart" style="position:relative;text-decoration:none">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-            @php $cartCount = count(session()->get('cart', [])); @endphp
+            @php $cartCount = auth()->user()->cartCount(); @endphp
             @if($cartCount > 0)
               <span style="position:absolute;top:-4px;right:-4px;background:var(--primary);color:#fff;font-size:0.6rem;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;line-height:1"> {{ $cartCount }} </span>
             @endif
@@ -367,6 +370,136 @@
       });
     });
   })();
+
+  // Client-side form validation
+  function initFormValidation(form) {
+    if (!form) return;
+    form.querySelectorAll('input, select, textarea').forEach(function(field) {
+      field.addEventListener('blur', function() { validateField(field); });
+      field.addEventListener('input', function() { validateField(field); });
+    });
+    form.addEventListener('submit', function(e) {
+      var valid = true;
+      form.querySelectorAll('input, select, textarea').forEach(function(field) {
+        if (!validateField(field)) valid = false;
+      });
+      if (!valid) e.preventDefault();
+    });
+  }
+
+  function validateField(field) {
+    var row = field.closest('.form-row');
+    if (!row) return true;
+    var errorEl = row.querySelector('.field-error');
+    if (!errorEl) {
+      errorEl = document.createElement('div');
+      errorEl.className = 'field-error';
+      row.appendChild(errorEl);
+    }
+
+    var valid = true;
+    var msg = '';
+
+    if (field.hasAttribute('required') && !field.value.trim()) {
+      valid = false;
+      msg = field.getAttribute('data-required-msg') || 'This field is required.';
+    } else if (field.type === 'email' && field.value.trim()) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value)) {
+        valid = false;
+        msg = 'Enter a valid email address.';
+      }
+    } else if (field.name === 'password' && field.value.length > 0 && field.value.length < 8) {
+      valid = false;
+      msg = 'Password must be at least 8 characters.';
+    } else if (field.name === 'password_confirmation') {
+      var pw = (field.closest('form') || document).querySelector('[name="password"]');
+      if (pw && field.value !== pw.value) {
+        valid = false;
+        msg = 'Passwords do not match.';
+      }
+    } else if (field.name === 'reg_number' && field.value.trim()) {
+      if (!/^[A-Z]+\/\d{2}\/(SC|IT|CS|EE|ME|CE|BE|AR|LA|BM|PM)\/\d{3,4}$/i.test(field.value.trim())) {
+        valid = false;
+        msg = 'Format: BIT/22/SC/0001';
+      }
+    }
+
+    row.classList.toggle('has-error', !valid);
+    errorEl.textContent = msg;
+    return valid;
+  }
+
+  document.querySelectorAll('form').forEach(initFormValidation);
+
+  // Global search
+  var searchWrapper = document.querySelector('.search-wrapper');
+  var searchInput = document.getElementById('global-search');
+  var searchDropdown = document.getElementById('search-dropdown');
+  var searchTimer;
+
+  if (searchInput && searchDropdown) {
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchTimer);
+      var val = this.value.trim();
+      if (val.length < 2) {
+        searchDropdown.classList.remove('open');
+        return;
+      }
+      searchTimer = setTimeout(function() {
+        fetch('/search?q=' + encodeURIComponent(val), {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.results || data.results.length === 0) {
+            searchDropdown.innerHTML = '<div class="sd-empty">No results found.</div>';
+            searchDropdown.classList.add('open');
+            return;
+          }
+          var groups = {};
+          data.results.forEach(function(item) {
+            if (!groups[item.type]) groups[item.type] = [];
+            groups[item.type].push(item);
+          });
+          var html = '';
+          var typeLabels = { event:'Events', article:'Articles', merch:'Merch', document:'Documents', member:'Members' };
+          Object.keys(groups).forEach(function(type) {
+            html += '<div class="sd-group-title">' + (typeLabels[type] || type) + '</div>';
+            groups[type].forEach(function(item) {
+              html += '<a href="' + item.url + '" class="sd-item">' +
+                '<span><div class="sd-title">' + escapeHtml(item.title) + '</div>' +
+                '<div class="sd-meta">' + escapeHtml(item.meta || '') + '</div></span>' +
+                '<span class="sd-type">' + type + '</span></a>';
+            });
+          });
+          searchDropdown.innerHTML = html;
+          searchDropdown.classList.add('open');
+        })
+        .catch(function() {
+          searchDropdown.classList.remove('open');
+        });
+      }, 300);
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!searchWrapper.contains(e.target)) {
+        searchDropdown.classList.remove('open');
+      }
+    });
+
+    searchInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        searchDropdown.classList.remove('open');
+        this.blur();
+      }
+    });
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
 
   // Toast notifications
   window.showToast = function(message, type) {

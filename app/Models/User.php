@@ -79,4 +79,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(MerchPurchase::class);
     }
+
+    public function cartItems()
+    {
+        return $this->hasMany(CartItem::class);
+    }
+
+    public function cartCount(): int
+    {
+        return $this->cartItems()->sum('quantity');
+    }
 }

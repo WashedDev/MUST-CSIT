@@ -31,6 +31,9 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+        if (! auth()->user()->onboarding_completed) {
+            return redirect()->intended(route('onboarding.index'));
+        }
         return redirect()->intended(route('dashboard'));
     }
 

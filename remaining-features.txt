@@ -1,23 +1,41 @@
-Remaining UX features to implement:
+✅ All planned features implemented — no remaining items.
 
-1. Client-side form validation
-   - Inline validation for registration, booking, and checkout forms
-   - Real-time error messages (not just server errors)
+## Completed Features
 
-2. Cart persistence in DB
-   - Store cart in a database table with user_id instead of session
-   - Survives logout/login and works across devices
+1. **Client-side form validation** (JS + CSS)
+   - Inline validation for all forms (required, email, password, reg_number format)
+   - Real-time error messages on blur/input; form submission blocked on errors
+   - CSS for `.field-error` and `.has-error` states
 
-3. Document preview
-   - Let members preview PDF/docx files in-browser before downloading from the repository
+2. **Cart persistence in DB**
+   - `cart_items` table with `user_id`, `merch_item_id`, `quantity` (unique constraint pair)
+   - `CartItem` model with `user()` and `merchItem()` relationships
+   - `User::cartItems()` hasMany & `cartCount()` helper
+   - `MerchController` refactored from session to DB queries
+   - Cart badges in all layouts now query `auth()->user()->cartCount()`
+   - Cart auto-cleared on successful checkout
 
-4. Email / SMS reminders
-   - Automatic reminder 24h before a booked event
-   - Can use Laravel notifications + scheduler
+3. **Document preview**
+   - `DocumentController::preview()` renders an inline viewer
+   - PDFs shown in full-height `<iframe>`
+   - DOCX/DOC show informational message with download prompt
+   - "Preview" button in document index for supported file types
 
-5. Onboarding wizard
-   - First-login flow for new members
-   - Steps: complete profile → browse events → visit merch store
+4. **Email/SMS reminders**
+   - `events:send-reminders` artisan command (runs hourly via scheduler)
+   - Queries bookings for events ±2h around 24h-from-now
+   - Creates in-app notification + sends email via `EventReminder` mailable
+   - `reminder_sent_at` column on bookings prevents duplicate reminders
 
-6. Global search (last)
-   - Wire up the search bar to search events, articles, merch, documents, and members
+5. **Onboarding wizard**
+   - `onboarding_completed` boolean column on users
+   - 3-step wizard: Complete Profile → Browse Events → Visit Merch Store
+   - Redirects after registration payment: `payment.success` → onboarding → dashboard
+   - Redirects after login if onboarding not completed
+   - `OnboardingController` with `index()` and `complete()` actions
+
+6. **Global search**
+   - `SearchController::search()` — unified search across Events, Articles, Merch, Documents, and Members
+   - AJAX/JSON endpoint via `GET /search?q=...`
+   - Debounced live search in the topbar with grouped dropdown results
+   - Click-outside to dismiss, Escape to close

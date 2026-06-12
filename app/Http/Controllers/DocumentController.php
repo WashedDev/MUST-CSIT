@@ -53,4 +53,16 @@ class DocumentController extends Controller
 
         return Storage::disk('public')->download($document->file_path);
     }
+
+    public function preview(Document $document)
+    {
+        if (! Storage::disk('public')->exists($document->file_path)) {
+            return back()->withErrors(['file' => 'File not found.']);
+        }
+
+        $url = Storage::disk('public')->url($document->file_path);
+        $ext = strtolower(pathinfo($document->file_path, PATHINFO_EXTENSION));
+
+        return view('documents.preview', compact('document', 'url', 'ext'));
+    }
 }
