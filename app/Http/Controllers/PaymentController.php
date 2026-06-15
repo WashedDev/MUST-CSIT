@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Payment;
+use App\Services\OneKhusaService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class PaymentController extends Controller
 {
@@ -35,7 +35,7 @@ class PaymentController extends Controller
         }
 
         $data = $request->validate([
-            'gateway' => 'required|string|in:ctechpay',
+            'gateway' => 'required|string|in:onekhusa',
         ]);
 
         $amount = config('membership.fee');
@@ -50,104 +50,143 @@ class PaymentController extends Controller
             'status'   => 'pending',
         ]);
 
-        return $this->initiateCtechPayOrder($payment);
+        return $this->initiateOneKhusaRequestToPay($payment);
     }
 
-    protected function initiateCtechPayOrder(Payment $payment)
+    protected function initiateOneKhusaRequestToPay(Payment $payment)
     {
-        $apiToken = config('services.ctechpay.token');
-        $baseUrl = config('services.ctechpay.base_url');
+        $oneKhusa = app(OneKhusaService::class);
 
-        $payload = [
-            'token'               => $apiToken,
-            'amount'              => (int) $payment->amount,
-            'category_flag'       => 'MEMBERSHIP_FEE',
-            'customer_reference'  => 'CSIT-' . $payment->id . '-' . time(),
-            'customer_message'    => 'CSIT Society Membership Fee',
-            'merchantAttributes'  => true,
-            'redirectUrl'         => route('payment.success'),
-            'cancelUrl'           => route('payment.cancel'),
-            'cancelText'          => 'Go Back',
-            'skipConfirmationPage' => false,
-        ];
+        $reference = 'CSIT-' . $payment->id . '-' . time();
 
-        $payment->update(['gateway_reference' => $payload['customer_reference']]);
+        $payment->update(['gateway_reference' => $reference]);
 
-        if (! $apiToken) {
+        if (! $oneKhusa->isConfigured()) {
             $this->completeMembershipPayment($payment);
 
             return redirect()->route('payment.success')
                 ->with('info', 'Payment gateway not configured. Membership marked as paid for testing.');
         }
 
-        try {
-            $response = Http::post($baseUrl . '/api/v1/orders', $payload);
+        $result = $oneKhusa->initiateRequestToPay(
+            referenceNumber: $reference,
+            description: 'CSIT Society Membership Fee',
+            amount: (float) $payment->amount,
+            capturedBy: auth()->user()->email,
+        );
 
-            $body = $response->json();
+        if ($result && ! empty($result['timedAccountNumber'])) {
+            $payment->update(['gateway_reference' => $result['referenceNumber'] ?? $reference]);
 
-            if ($response->successful() && ! empty($body['payment_page_URL'])) {
-                $payment->update(['gateway_reference' => $body['order_reference'] ?? $payload['customer_reference']]);
+            session()->put('payment_tan_' . $payment->id, [
+                'number' => $result['timedAccountNumber'],
+                'expiry' => $result['expiryDate'],
+            ]);
 
-                return redirect($body['payment_page_URL']);
+            return redirect()->route('payment.tan', $payment->id);
+        }
+
+        $payment->update(['status' => 'failed']);
+
+        return back()->withErrors(['payment' => 'Payment initiation failed. Please try again.']);
+    }
+
+    public function showTan(Payment $payment)
+    {
+        if ($payment->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if ($payment->status === 'completed') {
+            return redirect()->route('payment.success');
+        }
+
+        $tanData = session('payment_tan_' . $payment->id);
+
+        if (! $tanData) {
+            return redirect()->route('payment.show')
+                ->withErrors(['payment' => 'Payment session expired. Please try again.']);
+        }
+
+        return view('payment.tan', [
+            'payment'     => $payment,
+            'tanNumber'   => $tanData['number'],
+            'tanExpiry'   => $tanData['expiry'],
+            'amount'      => $payment->amount,
+            'description' => 'CSIT Society Membership Fee',
+            'itemLabel'   => 'Membership',
+        ]);
+    }
+
+    public function checkTanStatus(Payment $payment)
+    {
+        if ($payment->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if ($payment->status === 'completed') {
+            return $this->tanPaidResponse($payment);
+        }
+
+        if ($payment->gateway_reference && $this->verifyOneKhusaTransaction($payment->gateway_reference)) {
+            $payment->update(['status' => 'completed', 'paid_at' => now()]);
+
+            if ($payment->isMembership()) {
+                $this->completeMembershipPayment($payment);
+            } elseif ($payment->isEventPayment()) {
+                $this->completeEventPayment($payment);
             }
 
-            $payment->update(['status' => 'failed']);
-            return back()->withErrors(['payment' => 'Payment initiation failed. Please try again.']);
-        } catch (\Exception $e) {
-            $payment->update(['status' => 'failed']);
-            return back()->withErrors(['payment' => 'Could not connect to payment gateway. Please try again.']);
+            session()->forget('payment_tan_' . $payment->id);
+
+            return $this->tanPaidResponse($payment);
         }
+
+        return back()->withErrors(['status' => 'Payment not yet received. Please try again after sending the funds.']);
+    }
+
+    protected function tanPaidResponse(Payment $payment)
+    {
+        if ($payment->isMembership()) {
+            return redirect()->route('payment.success');
+        }
+
+        if ($payment->isEventPayment() && $payment->booking) {
+            return redirect()->route('events.show', $payment->booking->event)
+                ->with('success', 'Payment received. Your booking is confirmed.');
+        }
+
+        return redirect()->route('dashboard');
     }
 
     public function handleWebhook(Request $request)
     {
-        $orderRef = $request->input('orderRef');
-        $status = $request->input('status');
+        $reference = $request->input('metaData.referenceNumber')
+            ?? $request->input('sourceReferenceNumber');
 
-        if ($orderRef) {
-            $payment = Payment::where('gateway_reference', $orderRef)->first();
+        if (! $reference) {
+            return response('OK', 200);
+        }
 
-            if ($payment && $payment->status !== 'completed') {
-                $verified = $this->verifyCtechPayOrder($orderRef);
+        $payment = Payment::where('gateway_reference', $reference)->first();
 
-                if ($verified) {
-                    $payment->update(['status' => 'completed', 'paid_at' => now()]);
+        if ($payment && $payment->status !== 'completed') {
+            $eventCode = $request->header('X-OneKhusa-Webhook-Event', 'payrequest.success');
 
-                    if ($payment->isMembership()) {
-                        $this->completeMembershipPayment($payment);
-                    } elseif ($payment->isEventPayment()) {
-                        $this->completeEventPayment($payment);
-                    }
-                } elseif ($status === 'FAILED') {
-                    $payment->update(['status' => 'failed']);
+            if (str_contains($eventCode, 'success')) {
+                $payment->update(['status' => 'completed', 'paid_at' => now()]);
+
+                if ($payment->isMembership()) {
+                    $this->completeMembershipPayment($payment);
+                } elseif ($payment->isEventPayment()) {
+                    $this->completeEventPayment($payment);
                 }
+
+                session()->forget('payment_tan_' . $payment->id);
             }
         }
 
         return response('OK', 200);
-    }
-
-    protected function verifyCtechPayOrder(string $orderRef): bool
-    {
-        $apiToken = config('services.ctechpay.token');
-        $baseUrl = config('services.ctechpay.base_url');
-
-        if (! $apiToken) {
-            return true;
-        }
-
-        try {
-            $response = Http::get($baseUrl . '/api/v1/orders/status', [
-                'orderRef' => $orderRef,
-                'token'    => $apiToken,
-            ]);
-
-            $body = $response->json();
-
-            return $response->successful() && ($body['status'] ?? '') === 'COMPLETED';
-        } catch (\Exception $e) {
-            return false;
-        }
     }
 
     public function success()
@@ -177,7 +216,7 @@ class PaymentController extends Controller
 
         if ($payment) {
             if ($payment->gateway_reference) {
-                $verified = $this->verifyCtechPayOrder($payment->gateway_reference);
+                $verified = $this->verifyOneKhusaTransaction($payment->gateway_reference);
                 if ($verified) {
                     $this->completeMembershipPayment($payment);
                     return view('payment.success');
@@ -211,5 +250,22 @@ class PaymentController extends Controller
         if ($booking && $booking->status === 'pending_payment') {
             $booking->update(['status' => 'confirmed']);
         }
+    }
+
+    protected function verifyOneKhusaTransaction(string $reference): bool
+    {
+        $oneKhusa = app(OneKhusaService::class);
+
+        if (! $oneKhusa->isConfigured()) {
+            return true;
+        }
+
+        $transaction = $oneKhusa->getTransaction($reference);
+
+        if ($transaction && ($transaction['transaction']['transactionStatusCode'] ?? '') === 'S') {
+            return true;
+        }
+
+        return false;
     }
 }

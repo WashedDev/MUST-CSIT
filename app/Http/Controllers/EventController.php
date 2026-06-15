@@ -7,9 +7,9 @@ use App\Models\Election;
 use App\Models\Event;
 use App\Models\Notification;
 use App\Models\Payment;
+use App\Services\OneKhusaService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class EventController extends Controller
 {
@@ -93,11 +93,11 @@ class EventController extends Controller
                 'type'      => 'event',
                 'amount'    => $event->price,
                 'currency'  => config('membership.currency', 'MWK'),
-                'gateway'   => 'ctechpay',
+                'gateway'   => 'onekhusa',
                 'status'    => 'pending',
             ]);
 
-            return $this->initiateEventPayment($payment, $event);
+            return $this->initiateEventRequestToPay($payment, $event);
         }
 
         Notification::notify(
@@ -112,27 +112,15 @@ class EventController extends Controller
             ->with('success', 'You have been booked for this event.');
     }
 
-    protected function initiateEventPayment(Payment $payment, Event $event)
+    protected function initiateEventRequestToPay(Payment $payment, Event $event)
     {
-        $apiToken = config('services.ctechpay.token');
-        $baseUrl = config('services.ctechpay.base_url');
+        $oneKhusa = app(OneKhusaService::class);
 
-        $payload = [
-            'token'               => $apiToken,
-            'amount'              => (int) $payment->amount,
-            'category_flag'       => 'EVENT_REGISTRATION',
-            'customer_reference'  => 'CSIT-EVT-' . $payment->id . '-' . time(),
-            'customer_message'    => 'Registration for ' . $event->title,
-            'merchantAttributes'  => true,
-            'redirectUrl'         => route('events.show', $event),
-            'cancelUrl'           => route('events.show', $event),
-            'cancelText'          => 'Go Back',
-            'skipConfirmationPage' => false,
-        ];
+        $reference = 'CSIT-EVT-' . $payment->id . '-' . time();
 
-        $payment->update(['gateway_reference' => $payload['customer_reference']]);
+        $payment->update(['gateway_reference' => $reference]);
 
-        if (! $apiToken) {
+        if (! $oneKhusa->isConfigured()) {
             $payment->update(['status' => 'completed', 'paid_at' => now()]);
             $booking = $payment->booking;
             if ($booking) {
@@ -151,23 +139,27 @@ class EventController extends Controller
                 ->with('success', 'Booking confirmed. (Payment gateway not configured — marked as paid for testing.)');
         }
 
-        try {
-            $response = Http::post($baseUrl . '/api/v1/orders', $payload);
+        $result = $oneKhusa->initiateRequestToPay(
+            referenceNumber: $reference,
+            description: 'Registration for ' . $event->title,
+            amount: (float) $payment->amount,
+            capturedBy: auth()->user()->email,
+        );
 
-            $body = $response->json();
+        if ($result && ! empty($result['timedAccountNumber'])) {
+            $payment->update(['gateway_reference' => $result['referenceNumber'] ?? $reference]);
 
-            if ($response->successful() && ! empty($body['payment_page_URL'])) {
-                $payment->update(['gateway_reference' => $body['order_reference'] ?? $payload['customer_reference']]);
+            session()->put('payment_tan_' . $payment->id, [
+                'number' => $result['timedAccountNumber'],
+                'expiry' => $result['expiryDate'],
+            ]);
 
-                return redirect($body['payment_page_URL']);
-            }
-
-            $payment->update(['status' => 'failed']);
-            return back()->withErrors(['payment' => 'Payment initiation failed. Please try again.']);
-        } catch (\Exception $e) {
-            $payment->update(['status' => 'failed']);
-            return back()->withErrors(['payment' => 'Could not connect to payment gateway. Please try again.']);
+            return redirect()->route('payment.tan', $payment->id);
         }
+
+        $payment->update(['status' => 'failed']);
+
+        return back()->withErrors(['payment' => 'Payment initiation failed. Please try again.']);
     }
 
     public function cancel(Event $event)

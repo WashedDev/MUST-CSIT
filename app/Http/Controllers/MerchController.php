@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\CartItem;
 use App\Models\MerchItem;
 use App\Models\MerchPurchase;
+use App\Services\OneKhusaService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class MerchController extends Controller
 {
@@ -193,23 +193,9 @@ class MerchController extends Controller
             $p->update(['gateway_reference' => $orderRef]);
         }
 
-        $apiToken = config('services.ctechpay.token');
-        $baseUrl = config('services.ctechpay.base_url');
+        $oneKhusa = app(OneKhusaService::class);
 
-        $payload = [
-            'token'               => $apiToken,
-            'amount'              => (int) $totalAmount,
-            'category_flag'       => 'PRODUCT_PURCHASE',
-            'customer_reference'  => $orderRef,
-            'customer_message'    => 'CSIT Merch Order',
-            'merchantAttributes'  => true,
-            'redirectUrl'         => route('merch.checkout.success', ['order_ref' => $orderRef]),
-            'cancelUrl'           => route('merch.cart'),
-            'cancelText'          => 'Go Back',
-            'skipConfirmationPage' => false,
-        ];
-
-        if (! $apiToken) {
+        if (! $oneKhusa->isConfigured()) {
             foreach ($purchases as $p) {
                 $p->item->decrement('stock', $p->quantity);
                 $p->update(['status' => 'completed', 'paid_at' => now()]);
@@ -221,34 +207,124 @@ class MerchController extends Controller
                 ->with('info', 'Payment gateway not configured. Order marked as completed for testing.');
         }
 
-        try {
-            $response = Http::post($baseUrl . '/api/v1/orders', $payload);
-            $body = $response->json();
+        $result = $oneKhusa->initiateRequestToPay(
+            referenceNumber: $orderRef,
+            description: 'CSIT Merch Order',
+            amount: (float) $totalAmount,
+            capturedBy: auth()->user()->email,
+        );
 
-            if ($response->successful() && ! empty($body['payment_page_URL'])) {
-                $newRef = $body['order_reference'] ?? $orderRef;
+        if ($result && ! empty($result['timedAccountNumber'])) {
+            $newRef = $result['referenceNumber'] ?? $orderRef;
 
+            foreach ($purchases as $p) {
+                $p->update(['gateway_reference' => $newRef]);
+            }
+
+            session()->put('merch_tan_' . $newRef, [
+                'number' => $result['timedAccountNumber'],
+                'expiry' => $result['expiryDate'],
+                'total'  => $totalAmount,
+            ]);
+
+            return redirect()->route('merch.payment.tan', ['order_ref' => $newRef]);
+        }
+
+        foreach ($purchases as $p) {
+            $p->update(['status' => 'failed']);
+        }
+
+        return redirect()->route('merch.cart')
+            ->withErrors(['payment' => 'Payment initiation failed.']);
+    }
+
+    public function showTan(Request $request)
+    {
+        $orderRef = $request->query('order_ref');
+
+        if (! $orderRef) {
+            return redirect()->route('merch.index');
+        }
+
+        $purchases = MerchPurchase::where('gateway_reference', $orderRef)
+            ->where('user_id', auth()->id())
+            ->with('item')
+            ->get();
+
+        if ($purchases->isEmpty()) {
+            return redirect()->route('merch.index');
+        }
+
+        $completed = $purchases->every(fn ($p) => $p->status === 'completed');
+
+        if ($completed) {
+            CartItem::where('user_id', auth()->id())->delete();
+            return view('merch.success', ['purchases' => $purchases, 'orderRef' => $orderRef]);
+        }
+
+        $tanData = session('merch_tan_' . $orderRef);
+
+        if (! $tanData) {
+            return redirect()->route('merch.cart')
+                ->withErrors(['payment' => 'Payment session expired. Please try again.']);
+        }
+
+        $totalAmount = $tanData['total'] ?? $purchases->sum('amount');
+
+        return view('merch.payment-tan', [
+            'purchases'   => $purchases,
+            'orderRef'    => $orderRef,
+            'tanNumber'   => $tanData['number'],
+            'tanExpiry'   => $tanData['expiry'],
+            'totalAmount' => $totalAmount,
+        ]);
+    }
+
+    public function checkTanStatus(Request $request)
+    {
+        $orderRef = $request->input('order_ref');
+
+        if (! $orderRef) {
+            return redirect()->route('merch.index');
+        }
+
+        $purchases = MerchPurchase::where('gateway_reference', $orderRef)
+            ->where('user_id', auth()->id())
+            ->with('item')
+            ->get();
+
+        if ($purchases->isEmpty()) {
+            return redirect()->route('merch.index');
+        }
+
+        $completed = $purchases->every(fn ($p) => $p->status === 'completed');
+
+        if ($completed) {
+            CartItem::where('user_id', auth()->id())->delete();
+            return view('merch.success', ['purchases' => $purchases, 'orderRef' => $orderRef]);
+        }
+
+        $oneKhusa = app(OneKhusaService::class);
+
+        if ($oneKhusa->isConfigured()) {
+            $transaction = $oneKhusa->getTransaction($orderRef);
+
+            if ($transaction && ($transaction['transaction']['transactionStatusCode'] ?? '') === 'S') {
                 foreach ($purchases as $p) {
-                    $p->update(['gateway_reference' => $newRef]);
+                    if ($p->status !== 'completed') {
+                        $p->item->decrement('stock', $p->quantity);
+                        $p->update(['status' => 'completed', 'paid_at' => now()]);
+                    }
                 }
 
-                return redirect($body['payment_page_URL']);
-            }
+                CartItem::where('user_id', auth()->id())->delete();
+                session()->forget('merch_tan_' . $orderRef);
 
-            foreach ($purchases as $p) {
-                $p->update(['status' => 'failed']);
+                return view('merch.success', ['purchases' => $purchases, 'orderRef' => $orderRef]);
             }
-
-            return redirect()->route('merch.cart')
-                ->withErrors(['payment' => 'Payment initiation failed.']);
-        } catch (\Exception $e) {
-            foreach ($purchases as $p) {
-                $p->update(['status' => 'failed']);
-            }
-
-            return redirect()->route('merch.cart')
-                ->withErrors(['payment' => 'Could not connect to payment gateway.']);
         }
+
+        return back()->withErrors(['status' => 'Payment not yet received. Please try again after sending the funds.']);
     }
 
     public function checkoutSuccess(Request $request)
@@ -275,28 +351,21 @@ class MerchController extends Controller
             return view('merch.success', ['purchases' => $purchases, 'orderRef' => $orderRef]);
         }
 
-        $apiToken = config('services.ctechpay.token');
-        $baseUrl = config('services.ctechpay.base_url');
+        $oneKhusa = app(OneKhusaService::class);
 
-        if ($apiToken) {
-            try {
-                $response = Http::get($baseUrl . '/api/v1/orders/status', [
-                    'orderRef' => $orderRef,
-                    'token'    => $apiToken,
-                ]);
-                $body = $response->json();
+        if ($oneKhusa->isConfigured()) {
+            $transaction = $oneKhusa->getTransaction($orderRef);
 
-                if ($response->successful() && ($body['status'] ?? '') === 'COMPLETED') {
-                    foreach ($purchases as $p) {
-                        if ($p->status !== 'completed') {
-                            $p->item->decrement('stock', $p->quantity);
-                            $p->update(['status' => 'completed', 'paid_at' => now()]);
-                        }
+            if ($transaction && ($transaction['transaction']['transactionStatusCode'] ?? '') === 'S') {
+                foreach ($purchases as $p) {
+                    if ($p->status !== 'completed') {
+                        $p->item->decrement('stock', $p->quantity);
+                        $p->update(['status' => 'completed', 'paid_at' => now()]);
                     }
-                    CartItem::where('user_id', auth()->id())->delete();
-                    return view('merch.success', ['purchases' => $purchases, 'orderRef' => $orderRef]);
                 }
-            } catch (\Exception $e) {}
+                CartItem::where('user_id', auth()->id())->delete();
+                return view('merch.success', ['purchases' => $purchases, 'orderRef' => $orderRef]);
+            }
         }
 
         foreach ($purchases as $p) {

@@ -35,6 +35,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/payment/webhook', [PaymentController::class, 'handleWebhook'])->name('payment.webhook');
     Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
     Route::get('/payment/cancel', [PaymentController::class, 'cancel'])->name('payment.cancel');
+    Route::get('/payment/tan/{payment}', [PaymentController::class, 'showTan'])->name('payment.tan');
+    Route::post('/payment/tan/{payment}/check', [PaymentController::class, 'checkTanStatus'])->name('payment.tan.check');
 
     Route::middleware('membership')->group(function () {
         Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
@@ -76,6 +78,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/merch/cart/remove/{merchItem}', [MerchController::class, 'removeFromCart'])->name('merch.cart.remove');
         Route::post('/merch/cart/checkout', [MerchController::class, 'checkout'])->name('merch.checkout');
         Route::get('/merch/cart/success', [MerchController::class, 'checkoutSuccess'])->name('merch.checkout.success');
+        Route::get('/merch/payment/tan', [MerchController::class, 'showTan'])->name('merch.payment.tan');
+        Route::post('/merch/payment/tan/check', [MerchController::class, 'checkTanStatus'])->name('merch.payment.tan.check');
         Route::get('/merch/{merchItem}', [MerchController::class, 'show'])->name('merch.show');
         Route::get('/merch/{merchItem}/details', [MerchController::class, 'details'])->name('merch.details');
 

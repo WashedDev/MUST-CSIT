@@ -41,9 +41,12 @@ return [
         'redirect'      => env('GOOGLE_REDIRECT_URI'),
     ],
 
-    'ctechpay' => [
-        'token'    => env('CTECHPAY_TOKEN'),
-        'base_url' => env('CTECHPAY_BASE_URL', 'https://new-api.ctechpay.com'),
+    'onekhusa' => [
+        'api_key'                => env('ONEKHUSA_API_KEY'),
+        'api_secret'             => env('ONEKHUSA_API_SECRET'),
+        'organisation_id'        => env('ONEKHUSA_ORGANISATION_ID'),
+        'merchant_account_number' => env('ONEKHUSA_MERCHANT_ACCOUNT_NUMBER'),
+        'base_url'               => env('ONEKHUSA_BASE_URL', 'https://api.onekhusa.com/sandbox/v1'),
     ],
 
 ];
