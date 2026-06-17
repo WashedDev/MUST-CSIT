@@ -54,6 +54,36 @@
   <div class="dash-card">
     <div class="dash-card-head">
       <h3>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        Membership Stats
+      </h3>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--ink-secondary)">Paid Members</span>
+        <span><strong>{{ $stats['paid_members'] }}</strong> / {{ $stats['members'] }}</span>
+      </div>
+      <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:{{ $stats['members'] > 0 ? round(($stats['paid_members'] / $stats['members']) * 100) : 0 }}%;background:var(--accent);border-radius:4px"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:0.88rem">
+        <span style="color:var(--ink-secondary)">Unpaid: {{ $stats['unpaid_members'] }}</span>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:4px 0">
+      <div style="display:flex;justify-content:space-between;font-size:0.88rem">
+        <span style="color:var(--ink-secondary)">New this week</span>
+        <span><strong>{{ $stats['new_this_week'] }}</strong></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:0.88rem">
+        <span style="color:var(--ink-secondary)">New this month</span>
+        <span><strong>{{ $stats['new_this_month'] }}</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-card">
+    <div class="dash-card-head">
+      <h3>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         Upcoming Events
       </h3>

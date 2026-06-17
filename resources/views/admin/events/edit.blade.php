@@ -52,6 +52,30 @@
     </div>
 
     <div class="form-group">
+      <label for="event_type">Event Type</label>
+      <select id="event_type" name="event_type" required>
+        <option value="in_person" {{ old('event_type', $event->event_type) === 'in_person' ? 'selected' : '' }}>In-Person</option>
+        <option value="virtual" {{ old('event_type', $event->event_type) === 'virtual' ? 'selected' : '' }}>Virtual</option>
+        <option value="hybrid" {{ old('event_type', $event->event_type) === 'hybrid' ? 'selected' : '' }}>Hybrid</option>
+      </select>
+      @error('event_type') <span class="form-error">{{ $message }}</span> @enderror
+    </div>
+
+    <div class="form-group">
+      <label for="registration_deadline">Registration Deadline (optional)</label>
+      <input type="datetime-local" id="registration_deadline" name="registration_deadline"
+        value="{{ old('registration_deadline', $event->registration_deadline?->format('Y-m-d\TH:i')) }}">
+      @error('registration_deadline') <span class="form-error">{{ $message }}</span> @enderror
+    </div>
+
+    <div class="form-group">
+      <label for="cancel_deadline">Cancellation Deadline (optional)</label>
+      <input type="datetime-local" id="cancel_deadline" name="cancel_deadline"
+        value="{{ old('cancel_deadline', $event->cancel_deadline?->format('Y-m-d\TH:i')) }}">
+      @error('cancel_deadline') <span class="form-error">{{ $message }}</span> @enderror
+    </div>
+
+    <div class="form-group">
       <label for="tag">Tag</label>
       <input type="text" id="tag" name="tag" value="{{ old('tag', $event->tag) }}" placeholder="e.g. Workshop, Hackathon, Talk">
       @error('tag') <span class="form-error">{{ $message }}</span> @enderror

@@ -23,8 +23,14 @@
     @endif
     @if($event->tag) <span class="tag">{{ $event->tag }}</span> @endif
   </div>
+  @if(auth()->user()->isAdmin() && $event->bookings_count > 0)
+    <div style="margin-bottom:12px">
+      <a href="{{ route('events.attendees', $event) }}" class="btn btn-outline btn-sm">Export Attendees (CSV)</a>
+    </div>
+  @endif
 
   @if($userBooking)
+
     @if($userBooking->status === 'pending_payment')
       <p style="color:var(--ink-500)">Your booking is pending payment.</p>
       <form method="POST" action="{{ route('events.cancel', $event) }}" style="display:inline">

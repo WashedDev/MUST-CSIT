@@ -15,7 +15,8 @@ class ArticleFactory extends Factory
         return [
             'title'        => fake()->sentence(),
             'body'         => fake()->paragraphs(3, true),
-            'type'         => fake()->randomElement(['news', 'tech']),
+            'type'         => fake()->randomElement(['news', 'tech', 'announcement', 'event']),
+            'status'       => 'published',
             'user_id'      => User::factory(),
             'published_at' => now(),
         ];

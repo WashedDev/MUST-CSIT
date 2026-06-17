@@ -12,6 +12,8 @@ class Document extends Model
         'title',
         'file_path',
         'category',
+        'version',
+        'access_level',
         'user_id',
     ];
 

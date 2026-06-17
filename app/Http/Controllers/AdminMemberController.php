@@ -7,10 +7,20 @@ use Illuminate\Http\Request;
 
 class AdminMemberController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $members = User::latest()->paginate(20);
-        return view('admin.members.index', compact('members'));
+        $search = $request->query('search');
+        $members = User::when($search, fn($q, $v) => $q->where(function ($q) use ($v) {
+                $q->where('firstname', 'like', "%{$v}%")
+                  ->orWhere('lastname', 'like', "%{$v}%")
+                  ->orWhere('email', 'like', "%{$v}%")
+                  ->orWhere('reg_number', 'like', "%{$v}%")
+                  ->orWhere('programme', 'like', "%{$v}%");
+            }))
+            ->latest()
+            ->paginate(20);
+
+        return view('admin.members.index', compact('members', 'search'));
     }
 
     public function edit(User $member)
@@ -27,6 +37,8 @@ class AdminMemberController extends Controller
             'reg_number'=> 'nullable|string|max:50',
             'programme' => 'nullable|string|max:255',
             'year'      => 'nullable|string|max:10',
+            'role'              => 'required|in:member,moderator,executive,admin',
+            'membership_status' => 'required|in:active,suspended,expired,alumni',
         ]);
 
         $member->update($data);

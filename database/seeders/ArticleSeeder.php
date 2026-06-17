@@ -35,5 +35,21 @@ class ArticleSeeder extends Seeder
             'user_id'      => $author->id,
             'published_at' => now()->subDays(5),
         ]);
+
+        Article::create([
+            'title'        => 'Annual General Meeting – Save the Date',
+            'body'         => 'The CSIT Society Annual General Meeting will be held on 15 July 2026. All members are encouraged to attend. The agenda includes the annual report, financial statements, and the election of new executive committee members.',
+            'type'         => 'announcement',
+            'user_id'      => $author->id,
+            'published_at' => now()->subDays(3),
+        ]);
+
+        Article::create([
+            'title'        => 'Tech Talk: AI in Healthcare',
+            'body'         => 'Join us for a tech talk on "Artificial Intelligence in Healthcare" presented by Dr. Kamanga. The event will cover machine learning applications in medical diagnosis, patient care, and health informatics.',
+            'type'         => 'event',
+            'user_id'      => $author->id,
+            'published_at' => now()->subDay(),
+        ]);
     }
 }

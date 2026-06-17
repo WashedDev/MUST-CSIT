@@ -24,13 +24,30 @@
         <option value="minutes" {{ old('category') === 'minutes' ? 'selected' : '' }}>Minutes</option>
         <option value="reports" {{ old('category') === 'reports' ? 'selected' : '' }}>Reports</option>
         <option value="constitution" {{ old('category') === 'constitution' ? 'selected' : '' }}>Constitution</option>
+        <option value="financial" {{ old('category') === 'financial' ? 'selected' : '' }}>Financial Records</option>
         <option value="general" {{ old('category') === 'general' ? 'selected' : '' }}>General</option>
       </select>
       @error('category') <div class="form-error">{{ $message }}</div> @enderror
     </div>
 
     <div class="form-group">
-      <label for="file">File (max 10MB, PDF/Office docs)</label>
+      <label for="version">Version</label>
+      <input type="text" id="version" name="version" value="{{ old('version', '1.0') }}" maxlength="20">
+      @error('version') <div class="form-error">{{ $message }}</div> @enderror
+    </div>
+
+    <div class="form-group">
+      <label for="access_level">Access Level</label>
+      <select id="access_level" name="access_level" required>
+        <option value="all" {{ old('access_level') === 'all' ? 'selected' : '' }}>All Members</option>
+        <option value="executive" {{ old('access_level') === 'executive' ? 'selected' : '' }}>Executive Only</option>
+        <option value="admin" {{ old('access_level') === 'admin' ? 'selected' : '' }}>Admin Only</option>
+      </select>
+      @error('access_level') <div class="form-error">{{ $message }}</div> @enderror
+    </div>
+
+    <div class="form-group">
+      <label for="file">File (max 50MB, PDF/Office docs)</label>
       <input type="file" id="file" name="file" required>
       @error('file') <div class="form-error">{{ $message }}</div> @enderror
     </div>

@@ -23,6 +23,8 @@
       <select id="type" name="type" required>
         <option value="news" {{ old('type') === 'news' ? 'selected' : '' }}>News</option>
         <option value="tech" {{ old('type') === 'tech' ? 'selected' : '' }}>Tech Article</option>
+        <option value="announcement" {{ old('type') === 'announcement' ? 'selected' : '' }}>Announcement</option>
+        <option value="event" {{ old('type') === 'event' ? 'selected' : '' }}>Event</option>
       </select>
       @error('type') <div class="form-error">{{ $message }}</div> @enderror
     </div>
@@ -34,7 +36,8 @@
     </div>
 
     <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" type="submit">Publish</button>
+      <button class="btn btn-primary" type="submit" name="status" value="published">Publish</button>
+      <button class="btn btn-outline" type="submit" name="status" value="draft">Save as Draft</button>
       <a href="{{ route('articles.index') }}" class="btn btn-outline">Cancel</a>
     </div>
   </form>

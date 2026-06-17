@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\BookingConfirmation;
 use App\Models\Booking;
 use App\Models\Election;
 use App\Models\Event;
 use App\Models\Notification;
 use App\Models\Payment;
 use App\Services\OneKhusaService;
+use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -72,6 +74,10 @@ class EventController extends Controller
             return back()->withErrors(['event' => 'This event has already passed.']);
         }
 
+        if ($event->registration_deadline && now()->greaterThan($event->registration_deadline)) {
+            return back()->withErrors(['event' => 'Registration deadline for this event has passed.']);
+        }
+
         if (! $event->hasUnlimitedCapacity() && $event->availableSeats() <= 0) {
             return back()->withErrors(['event' => 'No seats available for this event.']);
         }
@@ -107,6 +113,8 @@ class EventController extends Controller
             "You are booked for {$event->title} on {$event->date->format('M d, Y H:i')}.",
             route('events.show', $event)
         );
+
+        Mail::to(auth()->user())->queue(new BookingConfirmation($booking));
 
         return redirect()->route('events.show', $event)
             ->with('success', 'You have been booked for this event.');
@@ -167,9 +175,32 @@ class EventController extends Controller
         $booking = Booking::where('event_id', $event->id)
             ->where('user_id', auth()->id())->firstOrFail();
 
+        if ($event->cancel_deadline && now()->greaterThan($event->cancel_deadline)) {
+            return back()->withErrors(['cancel' => 'The cancellation deadline for this event has passed.']);
+        }
+
         $booking->update(['status' => 'cancelled']);
 
         return redirect()->route('events.show', $event)
             ->with('success', 'Your booking has been cancelled.');
+    }
+
+    public function exportAttendees(Event $event)
+    {
+        $bookings = Booking::where('event_id', $event->id)
+            ->where('status', 'confirmed')
+            ->with('user')
+            ->get();
+
+        $csv = "Name,Email,Reg Number,Programme,Year\n";
+        foreach ($bookings as $booking) {
+            $u = $booking->user;
+            $csv .= '"' . $u->name . '","' . $u->email . '","' . ($u->reg_number ?? '') . '","' . ($u->programme ?? '') . '","' . ($u->year ?? '') . '"' . "\n";
+        }
+
+        return response($csv, 200, [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="attendees-' . $event->id . '.csv"',
+        ]);
     }
 }

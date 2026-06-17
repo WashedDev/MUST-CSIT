@@ -19,6 +19,7 @@ class User extends Authenticatable
         'programme',
         'year',
         'role',
+        'membership_status',
         'membership_paid',
         'paid_at',
     ];
@@ -42,7 +43,7 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return in_array($this->role, ['admin', 'executive']);
     }
 
     public function candidates()

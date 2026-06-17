@@ -5,7 +5,12 @@
 <div class="dash-header">
   <div class="dash-header-text">
     <h1>Results &mdash; {{ $election->title }}</h1>
-    <p>{{ $totalVotes }} total vote(s) cast.</p>
+    <p>{{ $totalVotes }} vote(s) cast
+      @if($totalEligible > 0)
+        &middot; {{ round(($totalVotes / $totalEligible) * 100) }}% turnout
+        ({{ $totalEligible }} eligible voters)
+      @endif
+    </p>
   </div>
 </div>
 
@@ -32,6 +37,9 @@
   </div>
 @endforelse
 
-<p style="margin-top:24px"><a href="{{ route('elections.show', $election) }}">&larr; Back to election</a></p>
+<div style="margin-top:24px;display:flex;gap:8px">
+  <a href="{{ route('elections.show', $election) }}">&larr; Back to election</a>
+  <a href="{{ route('elections.results.csv', $election) }}" class="btn btn-outline btn-sm" style="margin-left:auto">Export CSV</a>
+</div>
 
 @endsection

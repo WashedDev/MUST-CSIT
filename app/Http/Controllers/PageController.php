@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Models\Election;
 use App\Models\Event;
 use App\Models\User;
+use Illuminate\Http\Request;
 
 class PageController extends Controller
 {
@@ -34,8 +35,17 @@ class PageController extends Controller
             ->with('author')->limit(3)->get();
 
         if ($user->isAdmin()) {
+            $totalMembers = User::count();
+            $paidMembers = User::where('membership_paid', true)->count();
+            $newThisMonth = User::where('created_at', '>=', now()->startOfMonth())->count();
+            $newThisWeek = User::where('created_at', '>=', now()->startOfWeek())->count();
+
             $stats = [
-                'members'          => User::count(),
+                'members'          => $totalMembers,
+                'paid_members'     => $paidMembers,
+                'unpaid_members'   => $totalMembers - $paidMembers,
+                'new_this_month'   => $newThisMonth,
+                'new_this_week'    => $newThisWeek,
                 'upcoming_events'  => Event::where('date', '>=', now())->count(),
                 'active_elections' => Election::where('status', 'active')->count(),
                 'articles'         => Article::count(),
@@ -73,6 +83,32 @@ class PageController extends Controller
 
     public function profile()
     {
-        return view('pages.profile');
+        $bookings = auth()->user()->bookings()
+            ->with('event')
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return view('pages.profile', compact('bookings'));
+    }
+
+    public function editProfile()
+    {
+        return view('pages.profile-edit');
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $data = $request->validate([
+            'firstname' => 'required|string|max:60',
+            'lastname'  => 'required|string|max:60',
+            'programme' => 'required|string|max:120',
+            'year'      => 'required|integer|between:1,6',
+        ]);
+
+        auth()->user()->update($data);
+
+        return redirect()->route('profile')
+            ->with('success', 'Profile updated successfully.');
     }
 }

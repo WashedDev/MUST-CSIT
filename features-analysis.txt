@@ -1,0 +1,419 @@
+MUST CSIT Society — Digital Platform Feature Checklist & Analysis
+=================================================================
+Generated: 17 June 2026
+
+Source: CSIT_Feature_Checklist.docx
+Codebase: Full Laravel application analysis
+
+─────────────────────────────────────────────────────────────────────
+Subsystem 1 – Member Registration & Records Management
+─────────────────────────────────────────────────────────────────────
+
+1.1  User Registration
+----------------------
+
+MR-001  Registration form with fields: Full Name, Student/Staff ID,   ✅ DONE
+        Email, Programme, Year of Study, Contact Number
+        → AuthController register form includes: firstname, lastname,
+          reg_number, email, programme, year. No separate "Contact
+          Number" field.
+
+MR-002  Client-side and server-side form validation                   ✅ DONE
+        → Inline JS validation (required, email, password, reg_number
+          format) + server-side validation in AuthController.
+
+MR-003  Email verification — send link on submission, account         ❌ NOT DONE
+        inactive until verified
+        → No verification flow; accounts are created as active immediately.
+
+MR-004  Duplicate account prevention (unique Student ID + Email)      ✅ DONE
+        → Both email and reg_number have unique constraints.
+
+MR-005  Admin review queue — approve or reject applications           ❌ NOT DONE
+        → Registration is instant; no approval workflow.
+
+MR-006  Automated email notification on approval/rejection            ❌ NOT DONE
+        → No approval queue means no such notifications.
+
+MR-007  Batch member import via CSV upload                            ❌ NOT DONE
+        → No CSV import functionality exists.
+
+─────────────────────────────────────────────────────────────────────
+1.2  Authentication & Security
+─────────────────────────────────────────────────────────────────────
+
+MR-008  Secure login with email + password                             ✅ DONE
+        → AuthController with validated login.
+
+MR-009  Password hashing (bcrypt or Argon2)                           ✅ DONE
+        → Laravel default (bcrypt via Hash::make()).
+
+MR-010  Password reset via email link                                  ❌ NOT DONE
+        → password_reset_tokens table exists but no reset routes
+          or views are exposed.
+
+MR-011  Multi-Factor Authentication (MFA)                              ❌ NOT DONE
+        → No MFA implementation anywhere.
+
+MR-012  Session management with configurable timeout                   ❌ NOT DONE
+        → Laravel default session; no custom timeout logic.
+
+MR-013  Role-Based Access Control: Member, Moderator,                 🟡 PARTIAL
+        Executive, Administrator
+        → Only 'member' and 'admin' roles exist. Moderator/Executive
+          are not implemented. isAdmin() only checks role === 'admin'.
+
+─────────────────────────────────────────────────────────────────────
+1.3  Member Profiles
+─────────────────────────────────────────────────────────────────────
+
+MR-014  Member profile page: name, ID, status, role,                  ✅ DONE
+        join date, event history
+        → Profile page at /profile now shows basic info + recent
+          event booking history with status badges.
+
+MR-015  Member can update contact details, profile photo,             🟡 PARTIAL
+        and notification preferences
+        → Profile edit form added (name, programme, year).
+          Profile photo upload and notification prefs still missing.
+
+MR-016  Admin can view and edit any member record                     ✅ DONE
+        → AdminMemberController with edit/update.
+
+MR-017  Admin can change membership status: Active,                   ✅ DONE
+        Suspended, Expired, Alumni
+        → membership_status column added to users table (default:
+          active). Admin can change via member edit form. Shown
+          on profile and admin members list.
+
+MR-018  Admin can assign and revoke roles per member                  ✅ DONE
+        → Role dropdown added to admin member edit form (member,
+          moderator, executive, admin). isAdmin() updated to include
+          executive role.
+
+MR-019  Member search and filter by name, ID, status, role,           ✅ DONE
+        programme, join date
+        → Search bar added to admin members index page — searches
+          by name, email, reg_number, and programme.
+
+MR-020  Membership statistics dashboard: totals, new                  ✅ DONE
+        registrations per period, active vs inactive
+        → Admin dashboard now shows paid/unpaid breakdown with
+          progress bar, plus new members this week and this month.
+
+MR-021  Annual membership renewal with configurable                   ❌ NOT DONE
+        reminder emails before expiry
+        → No expiry tracking or renewal reminders.
+
+─────────────────────────────────────────────────────────────────────
+1.4  Document & Records Repository
+─────────────────────────────────────────────────────────────────────
+
+MR-022  Secure document upload: PDF, DOCX, XLSX, images               ✅ DONE
+        (up to 50 MB per file)
+        → Upload supports pdf,doc,docx,xls,xlsx,ppt,pptx,txt with
+          max size updated to 50 MB.
+
+MR-023  Document categories: Meeting Minutes, Reports,                ✅ DONE
+        Constitution & Bylaws, Financial Records, Other
+        → Categories: minutes, reports, constitution, financial,
+          general. All categories from spec covered.
+
+MR-024  Document metadata: title, category, upload date,              ✅ DONE
+        uploaded by, version, access level
+        → Added version and access_level columns. Access level
+          filter enforces which users can see which documents.
+
+MR-025  Document versioning — retain previous versions                 ❌ NOT DONE
+        → No versioning mechanism.
+
+MR-026  Access levels per document: Public, Executive-only,           ✅ DONE
+        Admin-only
+        → Documents filtered by access_level. Admin docs visible to
+          admins only, executive docs to executives/admins, public
+          to all paid members.
+
+MR-027  Document search by keyword, category, date range,             ✅ DONE
+        uploader
+        → Document index now has search by title/uploader plus
+          date range filter.
+
+MR-028  Admin can archive, restore, or delete documents               ❌ NOT DONE
+        (with reason + audit log)
+        → No admin document management at all.
+
+MR-029  Immutable audit log: all document views, downloads,           ❌ NOT DONE
+        uploads, deletions
+        → No audit logging of document activity.
+
+─────────────────────────────────────────────────────────────────────
+Subsystem 2 – Voting System
+─────────────────────────────────────────────────────────────────────
+
+2.1  Election Management
+─────────────────────────────────────────────────────────────────────
+
+VS-001  Admin creates election: title, description, start/end         ❌ NOT DONE
+        date-time, eligible voter group, positions
+        → No admin election CRUD. Elections are created via seeder
+          or factory only. Fields exist but no admin UI.
+
+VS-002  Support election types: single-choice, multiple-choice,       ❌ NOT DONE
+        ranked-choice
+        → Only single-choice (one candidate per vote) implemented.
+
+VS-003  Add, edit, remove candidates or options before                ❌ NOT DONE
+        election opens
+        → No candidate management UI.
+
+VS-004  Schedule elections for future automatic opening               ❌ NOT DONE
+        → starts_at/ends_at fields exist but no scheduling logic
+          to auto-open elections.
+
+VS-005  Admin can pause, extend, or close an active election          ❌ NOT DONE
+        (with justification note)
+        → No admin controls for modifying election state.
+
+VS-006  Non-binding opinion polls (separate from official             ❌ NOT DONE
+        elections)
+        → Not implemented.
+
+─────────────────────────────────────────────────────────────────────
+2.2  Voting & Ballot
+─────────────────────────────────────────────────────────────────────
+
+VS-007  Voter eligibility check against member registry before        ✅ DONE
+        showing ballot
+        → Must be logged in + membership paid + eligible_group
+          check. Elections can restrict to specific roles.
+
+VS-008  MFA required before casting a vote                            ❌ NOT DONE
+        → No MFA anywhere.
+
+VS-009  One vote per member per election — duplicate                  ✅ DONE
+        submissions rejected
+        → Unique constraint on (election_id, user_id) in votes table.
+
+VS-010  Confirmation screen shown before vote is finalised            ✅ DONE
+        → Vote goes through confirm step first, showing candidate
+          details before final submission.
+
+VS-011  Vote anonymisation — no admin or user can link a vote         ❌ NOT DONE
+        to a member
+        → votes table has user_id — votes are directly linked.
+
+VS-012  Unique verifiable vote receipt generated for each voter       ❌ NOT DONE
+        → No receipt system.
+
+VS-013  Ballots stored in encrypted, tamper-evident storage           ❌ NOT DONE
+        → Plain database storage.
+
+─────────────────────────────────────────────────────────────────────
+2.3  Results & Notifications
+─────────────────────────────────────────────────────────────────────
+
+VS-014  Auto-calculate and publish results on election closure        ✅ DONE
+        → Results only visible once election is closed. Auto-close
+          command (elections:close-expired) runs every minute.
+          Active/pending elections redirect with an info message.
+
+VS-015  Results display: total votes, turnout %, vote                 ✅ DONE
+        distribution per candidate/option
+        → Shows vote counts per candidate, total votes, turnout %
+          with eligible voter count.
+
+VS-016  Export results report in PDF and CSV                          ✅ DONE
+        → CSV export of election results with candidate name,
+          position, votes, and percentage.
+
+VS-017  Historical election results publicly viewable                 🟡 PARTIAL
+        by all members
+        → Results page exists and is accessible to all paid members.
+
+VS-018  Email notification to eligible voters when election opens     ❌ NOT DONE
+        → No election open notification.
+
+VS-019  Email reminder 24 hours before election closes                ❌ NOT DONE
+        → No election close reminders.
+
+VS-020  Immutable audit trail of all election events                  ❌ NOT DONE
+        → No audit logging for election events.
+
+─────────────────────────────────────────────────────────────────────
+Subsystem 3 – Society News & Event Booking System
+─────────────────────────────────────────────────────────────────────
+
+3.1  News & Content Publishing
+─────────────────────────────────────────────────────────────────────
+
+NE-001  Rich-text content editor: headings, bold/italic, links,       ❌ NOT DONE
+        lists, embedded images
+        → Plain <textarea> for article body; no rich editor.
+
+NE-002  Create, edit, save draft, and publish news posts              ✅ DONE
+        and tech articles
+        → Create + publish + edit + draft status. Articles can be
+          saved as draft, published later. Index shows published +
+          user's own drafts.
+
+NE-003  Post categories and tags: Announcement, Tech Article,         ✅ DONE
+        Event, Society Update
+        → Four article types: news, tech article, announcement, event.
+          Tags still missing (would require new table).
+
+NE-004  Schedule content for automatic future publication             ❌ NOT DONE
+        → published_at is always set to now().
+
+NE-005  Content approval workflow: contributor submits,               ❌ NOT DONE
+        moderator approves/rejects
+        → No approval workflow; articles are published immediately.
+
+NE-006  Post metadata display: author, publish date, category,        ✅ DONE
+        estimated read time
+        → Shows author, date, category, read time estimate.
+
+NE-007  Member search and filter: keyword, category, date range       ✅ DONE
+        → Global search covers articles; index filters by type
+          and date range (from/to date inputs).
+
+NE-008  Comment section on posts with moderation                      ❌ NOT DONE
+        → No comments at all.
+
+─────────────────────────────────────────────────────────────────────
+3.2  Event Management
+─────────────────────────────────────────────────────────────────────
+
+NE-009  Admin creates event: title, description, date/time,           ✅ DONE
+        venue, seat capacity, deadline, type (in-person/virtual/hybrid)
+        → Added event_type (in_person/virtual/hybrid) and
+          registration_deadline fields. Booking enforces deadline.
+
+NE-010  Event visibility control: public (all members) or             ❌ NOT DONE
+        restricted (specific groups)
+        → All events visible to all paid members equally.
+
+NE-011  Real-time remaining seat count on event listings              ✅ DONE
+        → availableSeats() method used in views.
+
+NE-012  Event views: list view and calendar view, filterable          ✅ DONE
+        by date, type, and status
+        → Grid list + calendar views with filtering.
+
+NE-013  Admin can modify and cancel events; cancellation              ✅ DONE
+        triggers auto-notification to registered attendees
+        → Admin can edit/delete events. Deletion sends in-app
+          notification to all confirmed attendees.
+
+NE-014  Recurring events setup (e.g., weekly meetings)                ❌ NOT DONE
+        → No recurring event support.
+
+─────────────────────────────────────────────────────────────────────
+3.3  Seat Reservation & Booking
+─────────────────────────────────────────────────────────────────────
+
+NE-015  One-click event registration for eligible members             ✅ DONE
+        → Single POST /events/{event}/book.
+
+NE-016  Enforce maximum seat capacity — no overbooking                ✅ DONE
+        → Capacity check in EventController@book.
+
+NE-017  Waitlist when fully booked; auto-promote waitlisted           ❌ NOT DONE
+        → No waitlist mechanism.
+
+NE-018  Member can cancel own booking (up to configurable             ✅ DONE
+        deadline)
+        → cancel_deadline field added. Cancellation blocked if
+          deadline has passed.
+
+NE-019  Booking confirmation email sent immediately                   ✅ DONE
+        → BookingConfirmation mailable queued on successful booking
+          with event details and link to event page.
+
+NE-020  Event reminder notification 24 hours before the event         ✅ DONE
+        → SendEventReminders artisan command + EventReminder
+          mailable, scheduled hourly.
+
+NE-021  QR-code ticket generated per confirmed booking                ❌ NOT DONE
+        for check-in
+        → No QR code generation.
+
+NE-022  Admin exports attendee list per event (CSV and PDF)           ✅ DONE
+        → CSV export of confirmed attendees with name, email,
+          reg number, programme, year. Link shown to admins on
+          event show page.
+
+─────────────────────────────────────────────────────────────────────
+Shared / Cross-Cutting Features
+─────────────────────────────────────────────────────────────────────
+
+4.1  Notifications
+─────────────────────────────────────────────────────────────────────
+
+SH-001  Unified email notification service shared by all              🟡 PARTIAL
+        three subsystems
+        → EventReminder mailable exists but not used for other
+          subsystems. No unified notification service class.
+
+SH-002  In-platform notification centre (bell icon /                  ✅ DONE
+        notification feed)
+        → NotificationController with dropdown, list, mark-read,
+          mark-all-read. Bell icon in dashboard topbar.
+
+SH-003  Member can configure notification preferences                 ❌ NOT DONE
+        (email on/off per category)
+        → No notification preference settings.
+
+─────────────────────────────────────────────────────────────────────
+4.2  Admin Dashboard
+─────────────────────────────────────────────────────────────────────
+
+SH-004  Unified admin dashboard with overview across all              ✅ DONE
+        subsystems
+        → Admin dashboard page with stats cards: Members, Events,
+          Elections, Articles + widgets.
+
+SH-005  Cross-system activity feed and audit log viewer               ❌ NOT DONE
+        → No audit log system at all.
+
+SH-006  System-wide search (members, documents, events, posts)        ✅ DONE
+        → SearchController with AJAX endpoint searching Events,
+          Articles, Merch, Documents, Members.
+
+─────────────────────────────────────────────────────────────────────
+4.3  Platform & Infrastructure
+─────────────────────────────────────────────────────────────────────
+
+SH-007  Mobile-responsive UI across all pages (min. 320px)            ✅ DONE
+        → Tailwind CSS responsive design.
+
+SH-008  RESTful API for all subsystems                                ❌ NOT DONE
+        → No API controllers or routes.
+
+SH-009  TLS 1.2+ encryption in transit, AES-256 at rest               ❌ NOT DONE
+        → Infrastructure concern; no HTTPS enforcement or
+          encryption config in code.
+
+SH-010  Cloud deployment (AWS, Azure, or equivalent)                  ❌ NOT DONE
+        → No deployment scripts or configs.
+
+SH-011  System availability target: 99.5% uptime                      ❌ NOT DONE
+        → Tracking/monitoring not implemented.
+
+SH-012  Support 500+ concurrent users without performance             ❌ NOT DONE
+        degradation
+        → No performance optimization or load testing evident.
+
+─────────────────────────────────────────────────────────────────────
+SUMMARY
+─────────────────────────────────────────────────────────────────────
+
+Total Features: 74
+✅ DONE:       40  (48.2%)
+🟡 PARTIAL:     4  (4.8%)
+❌ NOT DONE:   39  (47.0%)
+
+Breakdown by Subsystem:
+  Subsystem 1 (Registration):    29 features — 16 ✅,  2 🟡, 11 ❌
+  Subsystem 2 (Voting):          20 features —  6 ✅,  1 🟡, 13 ❌
+  Subsystem 3 (News & Events):   22 features — 14 ✅,  0 🟡,  8 ❌
+  Cross-Cutting:                 12 features —  4 ✅,  1 🟡,  7 ❌

@@ -14,6 +14,7 @@ class Election extends Model
         'starts_at',
         'ends_at',
         'status',
+        'eligible_group',
     ];
 
     protected function casts(): array

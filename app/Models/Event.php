@@ -16,14 +16,19 @@ class Event extends Model
         'capacity',
         'price',
         'tag',
+        'event_type',
+        'registration_deadline',
+        'cancel_deadline',
     ];
 
     protected function casts(): array
     {
         return [
-            'date'     => 'datetime',
-            'price'    => 'decimal:2',
-            'capacity' => 'integer',
+            'date'                 => 'datetime',
+            'price'                => 'decimal:2',
+            'capacity'             => 'integer',
+            'registration_deadline' => 'datetime',
+            'cancel_deadline'      => 'datetime',
         ];
     }
 

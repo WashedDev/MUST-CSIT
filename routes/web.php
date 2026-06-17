@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/events', [EventController::class, 'index'])->name('events.index');
         Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
         Route::get('/events/{event}/details', [EventController::class, 'details'])->name('events.details');
+        Route::get('/events/{event}/attendees', [EventController::class, 'exportAttendees'])->name('events.attendees');
         Route::post('/events/{event}/book', [EventController::class, 'book'])->name('events.book');
         Route::post('/events/{event}/cancel', [EventController::class, 'cancel'])->name('events.cancel');
 
@@ -50,14 +51,20 @@ Route::middleware('auth')->group(function () {
         Route::get('/articles/create', [ArticleController::class, 'create'])->name('articles.create');
         Route::post('/articles', [ArticleController::class, 'store'])->name('articles.store');
         Route::get('/articles/{article}', [ArticleController::class, 'show'])->name('articles.show');
+        Route::get('/articles/{article}/edit', [ArticleController::class, 'edit'])->name('articles.edit');
+        Route::put('/articles/{article}', [ArticleController::class, 'update'])->name('articles.update');
         Route::get('/articles/{article}/details', [ArticleController::class, 'details'])->name('articles.details');
 
         Route::get('/profile', [PageController::class, 'profile'])->name('profile');
+        Route::get('/profile/edit', [PageController::class, 'editProfile'])->name('profile.edit');
+        Route::put('/profile', [PageController::class, 'updateProfile'])->name('profile.update');
 
         Route::get('/elections', [ElectionController::class, 'index'])->name('elections.index');
         Route::get('/elections/{election}', [ElectionController::class, 'show'])->name('elections.show');
+        Route::post('/elections/{election}/confirm', [ElectionController::class, 'confirmVote'])->name('elections.confirm');
         Route::post('/elections/{election}/vote', [ElectionController::class, 'vote'])->name('elections.vote');
         Route::get('/elections/{election}/results', [ElectionController::class, 'results'])->name('elections.results');
+        Route::get('/elections/{election}/results/csv', [ElectionController::class, 'exportCsv'])->name('elections.results.csv');
 
         Route::get('/onboarding', [OnboardingController::class, 'index'])->name('onboarding.index');
         Route::post('/onboarding/complete', [OnboardingController::class, 'complete'])->name('onboarding.complete');

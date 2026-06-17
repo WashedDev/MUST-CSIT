@@ -18,6 +18,7 @@ class EventFactory extends Factory
             'location'    => fake()->randomElement(['MUST Lab A', 'Main Hall', 'Auditorium', 'Lab B']),
             'capacity'    => fake()->boolean(20) ? 0 : fake()->numberBetween(20, 100),
             'tag'         => fake()->randomElement(['Workshop', 'Hackathon', 'Talk', 'Community']),
+            'event_type'  => fake()->randomElement(['in_person', 'virtual', 'hybrid']),
         ];
     }
 }

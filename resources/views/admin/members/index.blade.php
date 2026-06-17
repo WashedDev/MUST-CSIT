@@ -9,6 +9,14 @@
   </div>
 </div>
 
+<form method="GET" style="margin-bottom:16px;display:flex;gap:8px;max-width:400px">
+  <input type="text" name="search" class="form-control" placeholder="Search by name, email, reg #, programme..." value="{{ $search ?? '' }}">
+  <button class="btn btn-primary btn-sm" type="submit">Search</button>
+  @if($search)
+    <a href="{{ route('admin.members.index') }}" class="btn btn-outline btn-sm">Clear</a>
+  @endif
+</form>
+
 <div class="dash-card" style="padding:0">
   <div class="dash-table-wrap">
     <table class="dash-table">
@@ -19,6 +27,7 @@
           <th>Reg #</th>
           <th>Programme</th>
           <th>Year</th>
+          <th>Status</th>
           <th>Joined</th>
           <th>Actions</th>
         </tr>
@@ -31,6 +40,7 @@
             <td>{{ $m->reg_number ?? '&mdash;' }}</td>
             <td>{{ $m->programme ?? '&mdash;' }}</td>
             <td>{{ $m->year ?? '&mdash;' }}</td>
+            <td>{{ ucfirst($m->membership_status ?? 'active') }}</td>
             <td>{{ $m->created_at->format('M d, Y') }}</td>
             <td class="cell-actions">
               <a href="{{ route('admin.members.edit', $m) }}" class="btn btn-primary btn-sm">Edit</a>

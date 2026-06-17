@@ -15,7 +15,7 @@
     <h2>{{ auth()->user()->name }}</h2>
     <div class="role">{{ auth()->user()->isAdmin() ? 'Admin' : 'Member' }} &middot; Year {{ auth()->user()->year }}</div>
     <div style="margin-top:18px">
-      <a href="#" class="btn btn-outline btn-block">Edit Profile</a>
+      <a href="{{ route('profile.edit') }}" class="btn btn-outline btn-block">Edit Profile</a>
     </div>
     @unless(auth()->user()->isAdmin())
       <div style="margin-top:10px">
@@ -58,6 +58,9 @@
         @else
           <span class="tag" style="background:#fef9c3;color:#A16207">Unpaid</span>
         @endif
+        @if(auth()->user()->membership_status)
+          <span class="tag" style="margin-left:4px">{{ ucfirst(auth()->user()->membership_status) }}</span>
+        @endif
       </div>
     </div>
     <div class="row">
@@ -66,5 +69,37 @@
     </div>
   </div>
 </div>
+
+@if($bookings->isNotEmpty())
+<div class="dash-header" style="margin-top:32px">
+  <div class="dash-header-text">
+    <h2>Event History</h2>
+    <p>Your recent event registrations.</p>
+  </div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:8px">
+  @foreach($bookings as $booking)
+    <div class="dash-card" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <strong>{{ $booking->event->title }}</strong>
+        <div style="color:var(--ink-secondary);font-size:0.88rem">
+          {{ $booking->event->date?->format('M d, Y') ?? 'No date' }}
+          @if($booking->event->location) &middot; {{ $booking->event->location }} @endif
+        </div>
+      </div>
+      <div>
+        @if($booking->status === 'confirmed')
+          <span class="tag" style="background:#dcfce7;color:#16A34A">Confirmed</span>
+        @elseif($booking->status === 'cancelled')
+          <span class="tag" style="background:#fef2f2;color:#DC2625">Cancelled</span>
+        @else
+          <span class="tag">{{ ucfirst($booking->status) }}</span>
+        @endif
+      </div>
+    </div>
+  @endforeach
+</div>
+@endif
 
 @endsection

@@ -42,6 +42,26 @@
       <input type="text" id="year" name="year" value="{{ old('year', $member->year) }}">
     </div>
 
+    <div class="form-group">
+      <label for="role">Role</label>
+      <select id="role" name="role">
+        <option value="member" {{ (old('role', $member->role) === 'member') ? 'selected' : '' }}>Member</option>
+        <option value="moderator" {{ (old('role', $member->role) === 'moderator') ? 'selected' : '' }}>Moderator</option>
+        <option value="executive" {{ (old('role', $member->role) === 'executive') ? 'selected' : '' }}>Executive</option>
+        <option value="admin" {{ (old('role', $member->role) === 'admin') ? 'selected' : '' }}>Admin</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="membership_status">Membership Status</label>
+      <select id="membership_status" name="membership_status">
+        <option value="active" {{ (old('membership_status', $member->membership_status ?? 'active') === 'active') ? 'selected' : '' }}>Active</option>
+        <option value="suspended" {{ (old('membership_status', $member->membership_status ?? 'active') === 'suspended') ? 'selected' : '' }}>Suspended</option>
+        <option value="expired" {{ (old('membership_status', $member->membership_status ?? 'active') === 'expired') ? 'selected' : '' }}>Expired</option>
+        <option value="alumni" {{ (old('membership_status', $member->membership_status ?? 'active') === 'alumni') ? 'selected' : '' }}>Alumni</option>
+      </select>
+    </div>
+
     <div style="display:flex;gap:8px">
       <button class="btn btn-primary" type="submit">Update Member</button>
       <a href="{{ route('admin.members.index') }}" class="btn btn-outline">Cancel</a>

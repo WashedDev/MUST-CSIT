@@ -13,8 +13,20 @@
   <a href="{{ route('articles.index') }}" class="btn {{ !$type ? 'btn-primary' : 'btn-outline' }} btn-sm">All</a>
   <a href="{{ route('articles.index', ['type' => 'news']) }}" class="btn {{ $type === 'news' ? 'btn-primary' : 'btn-outline' }} btn-sm">News</a>
   <a href="{{ route('articles.index', ['type' => 'tech']) }}" class="btn {{ $type === 'tech' ? 'btn-primary' : 'btn-outline' }} btn-sm">Tech</a>
+  <a href="{{ route('articles.index', ['type' => 'announcement']) }}" class="btn {{ $type === 'announcement' ? 'btn-primary' : 'btn-outline' }} btn-sm">Announcements</a>
+  <a href="{{ route('articles.index', ['type' => 'event']) }}" class="btn {{ $type === 'event' ? 'btn-primary' : 'btn-outline' }} btn-sm">Events</a>
   <a href="{{ route('articles.create') }}" class="btn btn-accent btn-sm" style="margin-left:auto">Write Article</a>
 </div>
+
+<form method="GET" style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+  @if($type)<input type="hidden" name="type" value="{{ $type }}">@endif
+  <input type="date" name="from" class="form-control" style="width:auto" value="{{ $from ?? '' }}" placeholder="From">
+  <input type="date" name="to" class="form-control" style="width:auto" value="{{ $to ?? '' }}" placeholder="To">
+  <button class="btn btn-primary btn-sm" type="submit">Filter</button>
+  @if($from || $to)
+    <a href="{{ route('articles.index', $type ? ['type' => $type] : []) }}" class="btn btn-outline btn-sm">Clear</a>
+  @endif
+</form>
 
 <div class="event-showcase-grid">
   @forelse($articles as $article)

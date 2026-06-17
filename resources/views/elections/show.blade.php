@@ -35,7 +35,7 @@
           <p style="margin:8px 0 0;font-size:0.92rem">{{ $candidate->manifesto }}</p>
         @endif
       </div>
-      <form method="POST" action="{{ route('elections.vote', $election) }}">
+      <form method="POST" action="{{ route('elections.confirm', $election) }}">
         @csrf
         <input type="hidden" name="candidate_id" value="{{ $candidate->id }}">
         <button class="btn btn-primary" type="submit">Vote</button>

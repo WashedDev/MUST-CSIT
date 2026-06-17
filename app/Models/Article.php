@@ -12,6 +12,7 @@ class Article extends Model
         'title',
         'body',
         'type',
+        'status',
         'user_id',
         'published_at',
     ];
@@ -26,5 +27,12 @@ class Article extends Model
     public function author()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function getReadTimeAttribute(): string
+    {
+        $words = str_word_count(strip_tags($this->body));
+        $mins = max(1, intdiv($words, 200));
+        return $mins . ' min read';
     }
 }
