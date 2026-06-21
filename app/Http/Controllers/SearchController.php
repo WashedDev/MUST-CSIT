@@ -14,6 +14,7 @@ class SearchController extends Controller
     public function search(Request $request)
     {
         $q = trim($request->query('q', ''));
+        $user = auth()->user();
 
         if (strlen($q) < 2) {
             return response()->json(['results' => []]);
@@ -34,8 +35,14 @@ class SearchController extends Controller
                 'meta' => $e->date->format('M d, Y') . ' @ ' . $e->location,
             ]);
 
-        $articles = Article::where('title', 'like', $term)
-            ->orWhere('body', 'like', $term)
+        $articles = Article::where(function ($q) use ($term) {
+                $q->where('title', 'like', $term)
+                  ->orWhere('body', 'like', $term);
+            })
+            ->where(function ($q) {
+                $q->where(fn($q) => $q->where('status', 'published')->where('approved', true))
+                  ->orWhere('user_id', auth()->id());
+            })
             ->latest()
             ->limit(5)
             ->get()
@@ -63,6 +70,15 @@ class SearchController extends Controller
 
         $documents = Document::where('title', 'like', $term)
             ->orWhere('category', 'like', $term)
+            ->where(function ($q) use ($user) {
+                $q->where('access_level', 'all');
+                if ($user->isAdmin()) {
+                    $q->orWhere('access_level', 'admin');
+                }
+                if (in_array($user->role, ['executive', 'admin'])) {
+                    $q->orWhere('access_level', 'executive');
+                }
+            })
             ->latest()
             ->limit(5)
             ->get()
@@ -73,26 +89,29 @@ class SearchController extends Controller
                 'meta'  => ucfirst($d->category),
             ]);
 
-        $members = User::where('firstname', 'like', $term)
-            ->orWhere('lastname', 'like', $term)
-            ->orWhere('email', 'like', $term)
-            ->orWhere('reg_number', 'like', $term)
-            ->limit(5)
-            ->get()
-            ->map(fn ($u) => [
-                'type'  => 'member',
-                'url'   => route('admin.members.edit', $u),
-                'title' => $u->name,
-                'meta'  => $u->email,
-            ]);
-
         $results = collect()
             ->merge($events)
             ->merge($articles)
             ->merge($merch)
-            ->merge($documents)
-            ->merge($members)
-            ->take(20);
+            ->merge($documents);
+
+        if ($user->isAdmin()) {
+            $members = User::where('firstname', 'like', $term)
+                ->orWhere('lastname', 'like', $term)
+                ->orWhere('email', 'like', $term)
+                ->orWhere('reg_number', 'like', $term)
+                ->limit(5)
+                ->get()
+                ->map(fn ($u) => [
+                    'type'  => 'member',
+                    'url'   => route('admin.members.edit', $u),
+                    'title' => $u->name,
+                    'meta'  => $u->email,
+                ]);
+            $results = $results->merge($members);
+        }
+
+        $results = $results->take(20);
 
         return response()->json(['results' => $results]);
     }

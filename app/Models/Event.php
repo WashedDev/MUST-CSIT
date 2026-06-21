@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Event extends Model
 {
-    use HasFactory;
+    use HasFactory, Auditable;
     protected $fillable = [
         'title',
         'description',
@@ -19,6 +20,7 @@ class Event extends Model
         'event_type',
         'registration_deadline',
         'cancel_deadline',
+        'visibility',
     ];
 
     protected function casts(): array

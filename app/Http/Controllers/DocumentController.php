@@ -55,12 +55,24 @@ class DocumentController extends Controller
             'file'         => 'required|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt|max:51200',
         ]);
 
+        $latest = Document::where('title', $data['title'])
+            ->where('category', $data['category'])
+            ->latest()
+            ->first();
+
+        $version = $data['version'] ?? '1.0';
+        if (! $data['version'] && $latest) {
+            $parts = explode('.', $latest->version);
+            $parts[0] = (int) ($parts[0] ?? 0) + 1;
+            $version = implode('.', $parts);
+        }
+
         $path = $request->file('file')->store('documents', 'public');
 
         Document::create([
             'title'        => $data['title'],
             'category'     => $data['category'],
-            'version'      => $data['version'] ?? '1.0',
+            'version'      => $version,
             'access_level' => $data['access_level'],
             'file_path'    => $path,
             'user_id'      => auth()->id(),
@@ -72,6 +84,10 @@ class DocumentController extends Controller
 
     public function download(Document $document)
     {
+        if (! $this->userCanAccess($document)) {
+            abort(403);
+        }
+
         if (! Storage::disk('public')->exists($document->file_path)) {
             return back()->withErrors(['file' => 'File not found.']);
         }
@@ -81,6 +97,10 @@ class DocumentController extends Controller
 
     public function preview(Document $document)
     {
+        if (! $this->userCanAccess($document)) {
+            abort(403);
+        }
+
         if (! Storage::disk('public')->exists($document->file_path)) {
             return back()->withErrors(['file' => 'File not found.']);
         }
@@ -89,5 +109,14 @@ class DocumentController extends Controller
         $ext = strtolower(pathinfo($document->file_path, PATHINFO_EXTENSION));
 
         return view('documents.preview', compact('document', 'url', 'ext'));
+    }
+
+    private function userCanAccess(Document $document): bool
+    {
+        $user = auth()->user();
+        if ($document->access_level === 'all') return true;
+        if ($document->access_level === 'executive' && in_array($user->role, ['executive', 'admin'])) return true;
+        if ($document->access_level === 'admin' && $user->isAdmin()) return true;
+        return false;
     }
 }

@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, Auditable;
 
     protected $fillable = [
         'firstname',
@@ -18,10 +19,8 @@ class User extends Authenticatable
         'reg_number',
         'programme',
         'year',
-        'role',
-        'membership_status',
-        'membership_paid',
-        'paid_at',
+        'notification_preferences',
+        'onboarding_completed',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -31,8 +30,10 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
-            'membership_paid'   => 'boolean',
-            'paid_at'           => 'datetime',
+            'membership_paid'          => 'boolean',
+            'paid_at'                  => 'datetime',
+            'notification_preferences' => 'array',
+            'permissions'              => 'array',
         ];
     }
 
@@ -44,6 +45,29 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return in_array($this->role, ['admin', 'executive']);
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        if ($this->role === 'admin') {
+            return true;
+        }
+        $perms = $this->permissions ?? [];
+        return in_array($permission, $perms);
+    }
+
+    public static function availablePermissions(): array
+    {
+        return [
+            'manage_members',
+            'manage_events',
+            'manage_elections',
+            'manage_articles',
+            'manage_documents',
+            'manage_merch',
+            'manage_payments',
+            'view_audit_logs',
+        ];
     }
 
     public function candidates()
@@ -89,5 +113,14 @@ class User extends Authenticatable
     public function cartCount(): int
     {
         return $this->cartItems()->sum('quantity');
+    }
+
+    public function wantsNotification(string $type): bool
+    {
+        $prefs = $this->notification_preferences ?? [];
+        if (empty($prefs)) {
+            return true;
+        }
+        return in_array($type, $prefs);
     }
 }

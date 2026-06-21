@@ -66,7 +66,7 @@
 
 @push('scripts')
 <script>
-  var expiryTime = new Date("{{ $tanExpiry }}").getTime();
+  var expiryTime = new Date(@json($tanExpiry)).getTime();
   function updateCountdown() {
     var now = new Date().getTime();
     var diff = expiryTime - now;

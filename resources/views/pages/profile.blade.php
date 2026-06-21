@@ -16,6 +16,9 @@
     <div class="role">{{ auth()->user()->isAdmin() ? 'Admin' : 'Member' }} &middot; Year {{ auth()->user()->year }}</div>
     <div style="margin-top:18px">
       <a href="{{ route('profile.edit') }}" class="btn btn-outline btn-block">Edit Profile</a>
+      <div style="margin-top:10px">
+        <a href="{{ route('profile.notifications') }}" class="btn btn-ghost btn-block btn-sm">Notification Preferences</a>
+      </div>
     </div>
     @unless(auth()->user()->isAdmin())
       <div style="margin-top:10px">
@@ -60,6 +63,9 @@
         @endif
         @if(auth()->user()->membership_status)
           <span class="tag" style="margin-left:4px">{{ ucfirst(auth()->user()->membership_status) }}</span>
+        @endif
+        @if(auth()->user()->membership_paid)
+          <a href="{{ route('membership.renew') }}" class="btn btn-ghost btn-sm" style="margin-left:8px">Renew</a>
         @endif
       </div>
     </div>

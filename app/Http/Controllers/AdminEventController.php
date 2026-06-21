@@ -10,6 +10,24 @@ use Illuminate\Http\Request;
 
 class AdminEventController extends Controller
 {
+    private function eventRules(bool $isUpdate = false): array
+    {
+        $dateRule = $isUpdate ? 'required|date' : 'required|date|after:now';
+        return [
+            'title'                => 'required|string|max:255',
+            'description'          => 'nullable|string',
+            'date'                 => $dateRule,
+            'location'             => 'required|string|max:255',
+            'capacity'             => 'nullable|integer|min:0',
+            'price'                => 'nullable|numeric|min:0',
+            'tag'                  => 'nullable|string|max:255',
+            'event_type'           => 'required|in:in_person,virtual,hybrid',
+            'visibility'           => 'required|in:all,restricted',
+            'registration_deadline'=> 'nullable|date|before_or_equal:date',
+            'cancel_deadline'      => 'nullable|date|before_or_equal:date',
+        ];
+    }
+
     public function index()
     {
         $events = Event::withCount('bookings')->latest()->paginate(20);
@@ -23,18 +41,7 @@ class AdminEventController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'title'                => 'required|string|max:255',
-            'description'          => 'nullable|string',
-            'date'                 => 'required|date|after:now',
-            'location'             => 'required|string|max:255',
-            'capacity'             => 'nullable|integer|min:0',
-            'price'                => 'nullable|numeric|min:0',
-            'tag'                  => 'nullable|string|max:255',
-            'event_type'           => 'required|in:in_person,virtual,hybrid',
-            'registration_deadline'=> 'nullable|date|before_or_equal:date',
-            'cancel_deadline'      => 'nullable|date|before_or_equal:date',
-        ]);
+        $data = $request->validate($this->eventRules());
 
         $data['capacity'] = $data['capacity'] !== null && $data['capacity'] !== '' ? (int) $data['capacity'] : 0;
         $data['price'] = $data['price'] !== null && $data['price'] !== '' ? $data['price'] : null;
@@ -52,18 +59,7 @@ class AdminEventController extends Controller
 
     public function update(Request $request, Event $event)
     {
-        $data = $request->validate([
-            'title'                => 'required|string|max:255',
-            'description'          => 'nullable|string',
-            'date'                 => 'required|date',
-            'location'             => 'required|string|max:255',
-            'capacity'             => 'nullable|integer|min:0',
-            'price'                => 'nullable|numeric|min:0',
-            'tag'                  => 'nullable|string|max:255',
-            'event_type'           => 'required|in:in_person,virtual,hybrid',
-            'registration_deadline'=> 'nullable|date|before_or_equal:date',
-            'cancel_deadline'      => 'nullable|date|before_or_equal:date',
-        ]);
+        $data = $request->validate($this->eventRules(isUpdate: true));
 
         $data['capacity'] = $data['capacity'] !== null && $data['capacity'] !== '' ? (int) $data['capacity'] : 0;
         $data['price'] = $data['price'] !== null && $data['price'] !== '' ? $data['price'] : null;

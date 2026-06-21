@@ -6,6 +6,9 @@
   <div class="dash-header-text">
     <h1>Results &mdash; {{ $election->title }}</h1>
     <p>{{ $totalVotes }} vote(s) cast
+      @if(isset($uniqueVoters))
+        &middot; {{ $uniqueVoters }} unique voter(s)
+      @endif
       @if($totalEligible > 0)
         &middot; {{ round(($totalVotes / $totalEligible) * 100) }}% turnout
         ({{ $totalEligible }} eligible voters)

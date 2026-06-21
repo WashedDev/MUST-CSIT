@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
+    use Auditable;
+
     protected $fillable = [
         'user_id',
         'booking_id',

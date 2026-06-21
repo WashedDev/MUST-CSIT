@@ -34,6 +34,15 @@ class PaymentController extends Controller
             return redirect()->route('dashboard');
         }
 
+        $existing = Payment::where('user_id', $user->id)
+            ->where('type', 'membership')
+            ->where('status', 'pending')
+            ->first();
+
+        if ($existing) {
+            return $this->initiateOneKhusaRequestToPay($existing);
+        }
+
         $data = $request->validate([
             'gateway' => 'required|string|in:onekhusa',
         ]);
@@ -161,6 +170,16 @@ class PaymentController extends Controller
 
     public function handleWebhook(Request $request)
     {
+        $secret = config('services.onekhusa.api_secret');
+        if ($secret) {
+            $signature = $request->header('X-OneKhusa-Signature');
+            $payload = $request->getContent();
+            $expected = hash_hmac('sha256', $payload, $secret);
+            if (! $signature || ! hash_equals($expected, $signature)) {
+                return response('Invalid signature', 403);
+            }
+        }
+
         $reference = $request->input('metaData.referenceNumber')
             ?? $request->input('sourceReferenceNumber');
 
@@ -241,7 +260,21 @@ class PaymentController extends Controller
         if ($payment->status !== 'completed') {
             $payment->update(['status' => 'completed', 'paid_at' => now()]);
         }
-        $payment->user->update(['membership_paid' => true, 'paid_at' => $payment->paid_at ?? now()]);
+
+        $updates = [
+            'membership_paid' => true,
+            'paid_at'         => $payment->paid_at ?? now(),
+        ];
+
+        if ($payment->type === 'renewal') {
+            $updates['membership_status'] = 'active';
+            $updates['approved'] = true;
+            $updates['approved_at'] = now();
+        } else {
+            $updates['membership_status'] = 'pending';
+        }
+
+        $payment->user->forceFill($updates)->save();
     }
 
     protected function completeEventPayment(Payment $payment)
@@ -250,6 +283,50 @@ class PaymentController extends Controller
         if ($booking && $booking->status === 'pending_payment') {
             $booking->update(['status' => 'confirmed']);
         }
+    }
+
+    public function showRenewal()
+    {
+        if (auth()->user()->membership_status === 'pending') {
+            return redirect()->route('profile')->with('info', 'Your membership is pending approval.');
+        }
+
+        $amount = config('membership.fee');
+        $currency = config('membership.currency');
+
+        return view('payment.renew', compact('amount', 'currency'));
+    }
+
+    public function processRenewal(Request $request)
+    {
+        $user = auth()->user();
+
+        $existing = Payment::where('user_id', $user->id)
+            ->where('type', 'renewal')
+            ->where('status', 'pending')
+            ->first();
+
+        if ($existing) {
+            return $this->initiateOneKhusaRequestToPay($existing);
+        }
+
+        $data = $request->validate([
+            'gateway' => 'required|string|in:onekhusa',
+        ]);
+
+        $amount = config('membership.fee');
+        $currency = config('membership.currency');
+
+        $payment = Payment::create([
+            'user_id'  => $user->id,
+            'type'     => 'renewal',
+            'amount'   => $amount,
+            'currency' => $currency,
+            'gateway'  => $data['gateway'],
+            'status'   => 'pending',
+        ]);
+
+        return $this->initiateOneKhusaRequestToPay($payment);
     }
 
     protected function verifyOneKhusaTransaction(string $reference): bool

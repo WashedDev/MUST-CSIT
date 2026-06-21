@@ -16,11 +16,19 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin'        => \App\Http\Middleware\Admin::class,
             'membership'   => \App\Http\Middleware\CheckMembershipPayment::class,
         ]);
+
+        $middleware->validateCsrfTokens(except: [
+            '/payment/webhook',
+        ]);
     })
 
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web(append: [
             HandleInertiaRequests::class,
+        ]);
+
+        $middleware->web(prepend: [
+            \App\Http\Middleware\SecurityHeaders::class,
         ]);
     })
 

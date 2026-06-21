@@ -103,12 +103,12 @@
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <span class="tag" style="{{ $b->status === 'confirmed' ? 'background:#dcfce7;color:#16A34A' : ($b->status === 'pending_payment' ? 'background:#fef9c3;color:#A16207' : '') }}">{{ ucfirst(str_replace('_', ' ', $b->status)) }}</span>
-          @if(!$eventDate->isPast())
-            <form method="POST" action="{{ route('events.cancel', $b->event) }}" style="display:inline" onsubmit="return confirm('Cancel your booking for {{ $b->event->title }}?')">
+            @if(!$eventDate->isPast())
+            <form method="POST" action="{{ route('events.cancel', $b->event) }}" style="display:inline" class="cancel-booking-form" data-title="{{ $b->event->title }}">
               @csrf
               <button class="btn btn-ghost btn-sm" type="submit" style="color:var(--accent);font-size:0.72rem;padding:4px 8px">Cancel</button>
             </form>
-          @endif
+            @endif
         </div>
       </div>
     @endforeach
@@ -118,6 +118,14 @@
 @push('scripts')
 <script>
 (function() {
+  document.querySelectorAll('.cancel-booking-form').forEach(function(form) {
+    form.addEventListener('submit', function(e) {
+      if (!confirm('Cancel your booking for ' + form.getAttribute('data-title') + '?')) {
+        e.preventDefault();
+      }
+    });
+  });
+
   document.querySelectorAll('.booking-row').forEach(function(row) {
     var dateStr = row.getAttribute('data-event-date');
     if (!dateStr) return;

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\BookingConfirmation;
+use App\Mail\BookingPromoted;
 use App\Models\Booking;
 use App\Models\Election;
 use App\Models\Event;
@@ -17,7 +18,15 @@ class EventController extends Controller
 {
     public function index(Request $request)
     {
+        $user = auth()->user();
         $view = $request->query('view', 'grid');
+
+        $visibilityFilter = fn($q) => $q->where(function ($q) use ($user) {
+            $q->where('visibility', 'all');
+            if ($user->isAdmin() || $user->role === 'executive') {
+                $q->orWhere('visibility', 'restricted');
+            }
+        });
 
         if ($view === 'calendar') {
             $month = $request->query('month', now()->format('Y-m'));
@@ -27,6 +36,7 @@ class EventController extends Controller
 
             $events = Event::withCount('bookings')
                 ->withExists(['bookings as user_booked' => fn($q) => $q->where('user_id', auth()->id())])
+                ->where($visibilityFilter)
                 ->whereBetween('date', [$startOfMonth, $endOfMonth])
                 ->orderBy('date')
                 ->get()
@@ -38,6 +48,7 @@ class EventController extends Controller
         }
 
         $events = Event::withCount('bookings')
+            ->where($visibilityFilter)
             ->withExists(['bookings as user_booked' => fn($q) => $q->where('user_id', auth()->id())])
             ->orderByDesc('user_booked')
             ->latest('date')
@@ -78,12 +89,21 @@ class EventController extends Controller
             return back()->withErrors(['event' => 'Registration deadline for this event has passed.']);
         }
 
-        if (! $event->hasUnlimitedCapacity() && $event->availableSeats() <= 0) {
-            return back()->withErrors(['event' => 'No seats available for this event.']);
-        }
-
         if (Booking::where('event_id', $event->id)->where('user_id', auth()->id())->exists()) {
             return back()->withErrors(['booking' => 'You are already booked for this event.']);
+        }
+
+        $isFull = ! $event->hasUnlimitedCapacity() && $event->availableSeats() <= 0;
+
+        if ($isFull) {
+            Booking::create([
+                'event_id' => $event->id,
+                'user_id'  => auth()->id(),
+                'status'   => 'waitlisted',
+            ]);
+
+            return redirect()->route('events.show', $event)
+                ->with('info', 'The event is full. You have been added to the waitlist.');
         }
 
         $booking = Booking::create([
@@ -181,12 +201,36 @@ class EventController extends Controller
 
         $booking->update(['status' => 'cancelled']);
 
+        $waitlisted = Booking::where('event_id', $event->id)
+            ->where('status', 'waitlisted')
+            ->oldest()
+            ->first();
+
+        if ($waitlisted) {
+            $newStatus = $event->isPaid() ? 'pending_payment' : 'confirmed';
+            $waitlisted->update(['status' => $newStatus]);
+
+            Notification::notify(
+                $waitlisted->user_id,
+                'booking_confirmed',
+                'Spot Opened!',
+                "A spot opened up for {$event->title}. Your booking has been confirmed.",
+                route('events.show', $event)
+            );
+
+            Mail::to($waitlisted->user)->queue(new BookingPromoted($waitlisted));
+        }
+
         return redirect()->route('events.show', $event)
             ->with('success', 'Your booking has been cancelled.');
     }
 
     public function exportAttendees(Event $event)
     {
+        if (! auth()->user()->isAdmin()) {
+            abort(403);
+        }
+
         $bookings = Booking::where('event_id', $event->id)
             ->where('status', 'confirmed')
             ->with('user')

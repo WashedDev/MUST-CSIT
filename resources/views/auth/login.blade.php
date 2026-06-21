@@ -40,7 +40,7 @@
           <input type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }}>
           <span>Remember me</span>
         </label>
-        <a href="#" aria-label="Forgot your password?">Forgot password?</a>
+        <a href="{{ route('password.request') }}" aria-label="Forgot your password?">Forgot password?</a>
       </div>
       <button type="submit" class="btn btn-primary btn-block">Sign In</button>
     </form>

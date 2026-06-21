@@ -33,6 +33,10 @@
         <input type="text" id="programme" name="programme" value="{{ old('programme') }}" placeholder="e.g. BSc Computer Science" required>
       </div>
       <div class="form-row">
+        <label for="reg_number">Registration Number</label>
+        <input type="text" id="reg_number" name="reg_number" value="{{ old('reg_number') }}" placeholder="e.g. CS/01/21">
+      </div>
+      <div class="form-row">
         <label for="year">Year of Study</label>
         <select id="year" name="year" required>
           <option value="">Select&hellip;</option>

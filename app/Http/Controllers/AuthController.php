@@ -22,7 +22,7 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (! str_ends_with($data['email'], '@must.ac.mw')) {
+        if (! str_ends_with($data['email'], '@' . config('app.allowed_domain', 'must.ac.mw'))) {
             return back()->withErrors(['email' => 'Only @must.ac.mw emails are allowed.'])->onlyInput('email');
         }
 

@@ -33,9 +33,4 @@ class MerchPurchase extends Model
     {
         return $this->belongsTo(MerchItem::class, 'merch_item_id');
     }
-
-    public function isCompleted(): bool
-    {
-        return $this->status === 'completed';
-    }
 }

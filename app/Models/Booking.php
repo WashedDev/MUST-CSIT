@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Booking extends Model
 {
-    use HasFactory;
+    use HasFactory, Auditable;
     protected $fillable = [
         'event_id',
         'user_id',
@@ -28,10 +29,5 @@ class Booking extends Model
     public function payment()
     {
         return $this->hasOne(Payment::class);
-    }
-
-    public function isPaid(): bool
-    {
-        return $this->status === 'confirmed' && $this->payment()->where('status', 'completed')->exists();
     }
 }

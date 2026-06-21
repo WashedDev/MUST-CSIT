@@ -12,6 +12,9 @@ class Vote extends Model
         'election_id',
         'user_id',
         'candidate_id',
+        'voter_hash',
+        'receipt_hash',
+        'anonymised',
     ];
 
     public function election()

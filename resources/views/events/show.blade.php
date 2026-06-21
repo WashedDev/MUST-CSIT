@@ -37,12 +37,21 @@
         @csrf
         <button class="btn btn-outline" type="submit">Cancel Booking</button>
       </form>
-    @else
-      <p>You are booked for this event <span class="tag">{{ $userBooking->status }}</span></p>
+    @elseif($userBooking->status === 'waitlisted')
+      <p style="color:var(--ink-500)">You are on the waitlist (position based on signup order).</p>
       <form method="POST" action="{{ route('events.cancel', $event) }}" style="display:inline">
         @csrf
-        <button class="btn btn-outline" type="submit">Cancel Booking</button>
+        <button class="btn btn-outline" type="submit">Leave Waitlist</button>
       </form>
+    @else
+      <p>You are booked for this event <span class="tag">{{ $userBooking->status }}</span></p>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <a href="{{ route('bookings.ticket', $userBooking) }}" class="btn btn-primary">View Ticket</a>
+        <form method="POST" action="{{ route('events.cancel', $event) }}" style="display:inline">
+          @csrf
+          <button class="btn btn-outline" type="submit">Cancel Booking</button>
+        </form>
+      </div>
     @endif
 
   @elseif(!$event->date->isPast() && ($event->hasUnlimitedCapacity() || $event->availableSeats() > 0))
@@ -62,6 +71,10 @@
 
   @else
     <p style="color:var(--ink-secondary)">No seats available.</p>
+    <form method="POST" action="{{ route('events.book', $event) }}" style="margin-top:8px">
+      @csrf
+      <button class="btn btn-outline" type="submit">Join Waitlist</button>
+    </form>
   @endif
 </div>
 

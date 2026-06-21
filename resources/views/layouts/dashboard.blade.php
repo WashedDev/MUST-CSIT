@@ -84,6 +84,12 @@
           </span>
           <span class="nav-label">Events</span>
         </a>
+        <a href="{{ route('polls.index') }}" class="{{ request()->routeIs('polls.*') ? 'active' : '' }}">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </span>
+          <span class="nav-label">Polls</span>
+        </a>
         <a href="{{ route('merch.index') }}" class="{{ request()->routeIs('merch.index') || request()->routeIs('merch.show') ? 'active' : '' }}">
           <span class="nav-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
@@ -126,11 +132,35 @@
             </span>
             <span class="nav-label">Merch</span>
           </a>
-          <a href="{{ route('admin.members.index') }}" class="{{ request()->routeIs('admin.members.*') ? 'active' : '' }}">
+          <a href="{{ route('admin.members.index') }}" class="{{ request()->routeIs('admin.members.*') && !request()->routeIs('admin.members.pending') ? 'active' : '' }}">
             <span class="nav-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </span>
             <span class="nav-label">Members</span>
+          </a>
+          <a href="{{ route('admin.members.pending') }}" class="{{ request()->routeIs('admin.members.pending') ? 'active' : '' }}">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </span>
+            <span class="nav-label">Pending</span>
+          </a>
+          <a href="{{ route('admin.audit-logs.index') }}" class="{{ request()->routeIs('admin.audit-logs.*') ? 'active' : '' }}">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </span>
+            <span class="nav-label">Audit Logs</span>
+          </a>
+          <a href="{{ route('admin.settings.index') }}" class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </span>
+            <span class="nav-label">Settings</span>
+          </a>
+          <a href="{{ route('admin.articles.pending') }}" class="{{ request()->routeIs('admin.articles.*') ? 'active' : '' }}">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </span>
+            <span class="nav-label">Articles</span>
           </a>
         @endif
         <div class="sidebar-section-title">Account</div>
@@ -372,63 +402,6 @@
   })();
 
   // Client-side form validation
-  function initFormValidation(form) {
-    if (!form) return;
-    form.querySelectorAll('input, select, textarea').forEach(function(field) {
-      field.addEventListener('blur', function() { validateField(field); });
-      field.addEventListener('input', function() { validateField(field); });
-    });
-    form.addEventListener('submit', function(e) {
-      var valid = true;
-      form.querySelectorAll('input, select, textarea').forEach(function(field) {
-        if (!validateField(field)) valid = false;
-      });
-      if (!valid) e.preventDefault();
-    });
-  }
-
-  function validateField(field) {
-    var row = field.closest('.form-row');
-    if (!row) return true;
-    var errorEl = row.querySelector('.field-error');
-    if (!errorEl) {
-      errorEl = document.createElement('div');
-      errorEl.className = 'field-error';
-      row.appendChild(errorEl);
-    }
-
-    var valid = true;
-    var msg = '';
-
-    if (field.hasAttribute('required') && !field.value.trim()) {
-      valid = false;
-      msg = field.getAttribute('data-required-msg') || 'This field is required.';
-    } else if (field.type === 'email' && field.value.trim()) {
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value)) {
-        valid = false;
-        msg = 'Enter a valid email address.';
-      }
-    } else if (field.name === 'password' && field.value.length > 0 && field.value.length < 8) {
-      valid = false;
-      msg = 'Password must be at least 8 characters.';
-    } else if (field.name === 'password_confirmation') {
-      var pw = (field.closest('form') || document).querySelector('[name="password"]');
-      if (pw && field.value !== pw.value) {
-        valid = false;
-        msg = 'Passwords do not match.';
-      }
-    } else if (field.name === 'reg_number' && field.value.trim()) {
-      if (!/^[A-Z]+\/\d{2}\/(SC|IT|CS|EE|ME|CE|BE|AR|LA|BM|PM)\/\d{3,4}$/i.test(field.value.trim())) {
-        valid = false;
-        msg = 'Format: BIT/22/SC/0001';
-      }
-    }
-
-    row.classList.toggle('has-error', !valid);
-    errorEl.textContent = msg;
-    return valid;
-  }
-
   document.querySelectorAll('form').forEach(initFormValidation);
 
   // Global search
@@ -533,5 +506,6 @@
   $_flashType = session('success') ? 'success' : (session('info') ? 'info' : (session('error') || $errors->first() ? 'error' : ''));
 @endphp
 <div id="flash-toast" data-message="{{ $_flashMsg }}" data-type="{{ $_flashType }}" style="display:none"></div>
+<script src="{{ asset('js/form-validation.js') }}"></script>
 </body>
 </html>

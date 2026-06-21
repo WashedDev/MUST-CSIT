@@ -29,10 +29,12 @@ class PageController extends Controller
         $user = auth()->user();
 
         $upcomingEvents = Event::where('date', '>=', now())
-            ->orderBy('date')->limit(3)->get();
+            ->orderBy('date')->limit(3)
+            ->select(['id', 'title', 'date', 'location', 'tag'])->get();
 
         $latestArticles = Article::latest('published_at')
-            ->with('author')->limit(3)->get();
+            ->with('author:id,firstname,lastname')->limit(3)
+            ->select(['id', 'title', 'type', 'user_id', 'published_at'])->get();
 
         if ($user->isAdmin()) {
             $totalMembers = User::count();
@@ -51,7 +53,8 @@ class PageController extends Controller
                 'articles'         => Article::count(),
             ];
 
-            $recentMembers = User::latest()->limit(5)->get();
+            $recentMembers = User::latest()->limit(5)
+                ->select(['id', 'firstname', 'lastname', 'email', 'reg_number', 'created_at'])->get();
 
             return view('pages.dashboard-admin', compact('stats', 'upcomingEvents', 'latestArticles', 'recentMembers'));
         }
@@ -110,5 +113,27 @@ class PageController extends Controller
 
         return redirect()->route('profile')
             ->with('success', 'Profile updated successfully.');
+    }
+
+    public function notificationPrefs()
+    {
+        return view('pages.notification-prefs');
+    }
+
+    public function updateNotificationPrefs(Request $request)
+    {
+        $types = ['new_article', 'booking_confirmed', 'event_reminder', 'payment_received', 'election_opened'];
+
+        $data = $request->validate([
+            'notifications' => 'nullable|array',
+            'notifications.*' => 'in:' . implode(',', $types),
+        ]);
+
+        auth()->user()->update([
+            'notification_preferences' => $data['notifications'] ?? [],
+        ]);
+
+        return redirect()->route('profile')
+            ->with('success', 'Notification preferences updated.');
     }
 }

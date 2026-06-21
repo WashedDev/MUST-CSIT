@@ -64,7 +64,7 @@
 
 <script>
 document.getElementById('quantity')?.addEventListener('input', function() {
-  var price = {{ $merchItem->price }};
+  var price = @json((float) $merchItem->price);
   var total = (this.value * price).toLocaleString();
   var btn = this.closest('form').querySelector('button[type=submit]');
   btn.textContent = 'Add to Cart \u00b7 MWK ' + total;

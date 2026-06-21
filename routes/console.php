@@ -9,4 +9,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('events:send-reminders')->hourly();
+Schedule::command('elections:open-pending')->everyMinute();
 Schedule::command('elections:close-expired')->everyMinute();
+Schedule::command('articles:publish-scheduled')->everyMinute();
+Schedule::command('elections:send-closing-reminders')->hourly();

@@ -62,6 +62,22 @@
       </select>
     </div>
 
+    @unless($member->role === 'admin')
+      <div class="form-group">
+        <label>Permissions</label>
+        <div style="display:flex;flex-direction:column;gap:6px;padding:8px 0">
+          @php $userPerms = $member->permissions ?? []; @endphp
+          @foreach(\App\Models\User::availablePermissions() as $perm)
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" name="permissions[]" value="{{ $perm }}"
+                {{ in_array($perm, $userPerms) ? 'checked' : '' }}>
+              <span style="font-size:0.9rem">{{ ucwords(str_replace('_', ' ', $perm)) }}</span>
+            </label>
+          @endforeach
+        </div>
+      </div>
+    @endunless
+
     <div style="display:flex;gap:8px">
       <button class="btn btn-primary" type="submit">Update Member</button>
       <a href="{{ route('admin.members.index') }}" class="btn btn-outline">Cancel</a>

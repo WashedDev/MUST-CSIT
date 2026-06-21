@@ -23,6 +23,40 @@
   {{ $article->body }}
 </div>
 
+<div class="dash-card" style="max-width:720px;margin-top:16px">
+  <h2 style="margin-bottom:16px">Comments ({{ $article->comments->count() }})</h2>
+
+  @forelse($article->comments as $comment)
+    <div style="padding:10px 0;border-bottom:1px solid var(--outline)">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong style="font-size:0.85rem">{{ $comment->user->name }}</strong>
+        <span style="font-size:0.75rem;color:var(--ink-secondary)">
+          {{ $comment->created_at->diffForHumans() }}
+          @if($comment->user_id === auth()->id() || auth()->user()->isAdmin())
+            <form method="POST" action="{{ route('comments.destroy', $comment) }}" style="display:inline" onsubmit="return confirm('Delete this comment?')">
+              @csrf @method('DELETE')
+              <button class="btn btn-ghost btn-sm" style="font-size:0.75rem;margin-left:8px">Delete</button>
+            </form>
+          @endif
+        </span>
+      </div>
+      <p style="margin:4px 0 0;font-size:0.95rem">{{ $comment->body }}</p>
+    </div>
+  @empty
+    <p class="dash-empty">No comments yet.</p>
+  @endforelse
+
+  <form method="POST" action="{{ route('articles.comments.store', $article) }}" style="margin-top:16px">
+    @csrf
+    <div class="form-group">
+      <label for="body">Leave a comment</label>
+      <textarea id="body" name="body" rows="3" maxlength="2000" required>{{ old('body') }}</textarea>
+      @error('body') <span class="form-error">{{ $message }}</span> @enderror
+    </div>
+    <button class="btn btn-primary" type="submit">Post Comment</button>
+  </form>
+</div>
+
 <p style="margin-top:24px"><a href="{{ route('articles.index') }}">&larr; Back to articles</a></p>
 
 @endsection

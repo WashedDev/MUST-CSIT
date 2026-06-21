@@ -8,7 +8,7 @@
   </div>
 </div>
 
-<div class="dash-card" style="max-width:640px">
+<div class="dash-card" style="max-width:720px">
   <form method="POST" action="{{ route('articles.update', $article) }}">
     @csrf
     @method('PUT')
@@ -32,7 +32,7 @@
 
     <div class="form-group">
       <label for="body">Body</label>
-      <textarea id="body" name="body" rows="10" required>{{ old('body', $article->body) }}</textarea>
+      <textarea id="body" name="body" rows="16" required>{{ old('body', $article->body) }}</textarea>
       @error('body') <div class="form-error">{{ $message }}</div> @enderror
     </div>
 
@@ -45,5 +45,21 @@
     </div>
   </form>
 </div>
+
+@push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/7.7.2/tinymce.min.js" integrity="sha512-5LE8sD4SUQBNdMSAR4sSovMRxS9NOK+Uaw/6UeMF5yRs8J5aMH4g5l/rqVvGfV9XghIdNCjtQ1H0t0NCEc5VFg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+tinymce.init({
+  selector: '#body',
+  plugins: 'advlist autolink lists link image charmap preview anchor pagebreak codesample table code fullscreen insertdatetime media table wordcount',
+  toolbar: 'undo redo | blocks fontsize | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image table code | fullscreen',
+  menubar: false,
+  branding: false,
+  promotion: false,
+  height: 400,
+  content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 16px; line-height: 1.6; padding: 12px; }'
+});
+</script>
+@endpush
 
 @endsection

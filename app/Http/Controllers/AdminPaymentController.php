@@ -27,7 +27,7 @@ class AdminPaymentController extends Controller
             $payment->update(['status' => 'completed', 'paid_at' => now()]);
         }
 
-        $payment->user->update(['membership_paid' => true, 'paid_at' => $payment->paid_at ?? now()]);
+        $payment->user->forceFill(['membership_paid' => true, 'paid_at' => $payment->paid_at ?? now()])->save();
 
         return redirect()->route('admin.payments.index')
             ->with('success', 'Payment marked as completed.');

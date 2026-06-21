@@ -7,6 +7,7 @@
     <h1>Manage Members</h1>
     <p>{{ $members->total() }} registered member(s).</p>
   </div>
+  <a href="{{ route('admin.members.import') }}" class="btn btn-outline">Import CSV</a>
 </div>
 
 <form method="GET" style="margin-bottom:16px;display:flex;gap:8px;max-width:400px">

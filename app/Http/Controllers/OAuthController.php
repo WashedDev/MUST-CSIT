@@ -20,7 +20,7 @@ class OAuthController extends Controller
     {
         $googleUser = Socialite::driver('google')->stateless()->user();
 
-        if (! str_ends_with($googleUser->getEmail(), '@must.ac.mw')) {
+        if (! str_ends_with($googleUser->getEmail(), '@' . config('app.allowed_domain', 'must.ac.mw'))) {
             return redirect()->route('login')
                 ->withErrors(['email' => 'Only @must.ac.mw email addresses are allowed.']);
         }
@@ -64,6 +64,7 @@ class OAuthController extends Controller
 
         $data = $request->validate([
             'programme' => ['required', 'string', 'max:120'],
+            'reg_number' => ['nullable', 'string', 'max:40', 'unique:users,reg_number'],
             'year'      => ['required', 'integer', 'between:1,6'],
         ]);
 
@@ -72,6 +73,7 @@ class OAuthController extends Controller
             'lastname'   => $oauth['lastname'],
             'email'      => $oauth['email'],
             'password'   => $oauth['password'],
+            'reg_number' => $data['reg_number'] ?? null,
             'programme'  => $data['programme'],
             'year'       => $data['year'],
         ]);
